@@ -1,0 +1,82 @@
+import { useSession } from "../../game/session/SessionContext";
+import { PixelSprite } from "../pixel/PixelSprite";
+import { iconSprite, iconForLocation } from "../../engine/sprites/icons";
+
+function dayLabel(ts: number): string {
+  const d = new Date(ts);
+  const today = new Date();
+  if (d.toDateString() === today.toDateString()) return "Today";
+  const yest = new Date(today.getTime() - 86400000);
+  if (d.toDateString() === yest.toDateString()) return "Yesterday";
+  return d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" });
+}
+
+/**
+ * Moments from the visit, written warmly and without any measurement.
+ * This is the part of the record a family would actually want to read.
+ */
+export function AlbumPanel() {
+  const { memories, clearMemories } = useSession();
+  const grouped = memories
+    .slice()
+    .reverse()
+    .reduce<Record<string, typeof memories>>((acc, m) => {
+      const key = dayLabel(m.timestamp);
+      (acc[key] ??= []).push(m);
+      return acc;
+    }, {});
+
+  return (
+    <div className="mx-auto max-w-5xl px-6 py-8">
+      <header className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">Family Album</h1>
+          <p className="text-slate-500">Moments from the village — kept as memories, not results.</p>
+        </div>
+        {memories.length > 0 && (
+          <button
+            onClick={clearMemories}
+            className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 hover:bg-slate-50"
+          >
+            Clear album
+          </button>
+        )}
+      </header>
+
+      {memories.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+          <p className="text-lg font-medium text-slate-700">The album is empty for now.</p>
+          <p className="mt-1 text-slate-500">
+            Each thing done in the village — making tea, naming faces, watering the garden — is saved here as a small
+            note.
+          </p>
+        </div>
+      ) : (
+        Object.entries(grouped).map(([day, entries]) => (
+          <section key={day} className="mb-8">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">{day}</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {entries.map((m) => (
+                <article
+                  key={m.id}
+                  className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <div className="mt-0.5 shrink-0 rounded-lg bg-amber-50 p-2">
+                    <PixelSprite bitmap={() => iconSprite(iconForLocation(m.locationId))} scale={2} />
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-800">{m.title}</p>
+                    <p className="text-slate-600">{m.note}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {new Date(m.timestamp).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ))
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,319 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { PixelStage, STAGE_H, STAGE_W, type StageLayout } from "../../engine/PixelStage";
+import {
+  drawSky,
+  drawAtmosphericHaze,
+  cloudLayer,
+  farRidgeLayer,
+  midRidgeLayer,
+  forestLayer,
+  terraceLayer,
+  LAYER_OVERSCAN,
+} from "../../engine/sprites/backdrop";
+import { drawTileGrid, tileBitmapFor, TILE } from "../../engine/tilemap";
+import { renderWorldObjects } from "../../engine/world";
+import { skyStateFor, phaseFor, type TimeMode } from "../../engine/fx/DayNight";
+import { ParticleField } from "../../engine/fx/Particles";
+import { weatherState, weatherEmitters, drawWeatherOverlay, drawRainRipples, type WeatherKind } from "../../engine/fx/Weather";
+import { drawLights, drawGodRays, drawStars, drawWaterReflection } from "../../engine/fx/Lighting";
+import type { LocationScene, Hotspot, EasterEgg } from "../../data/locations/types";
+import { HotspotPlaque } from "./HotspotPlaque";
+import { iconSprite } from "../../engine/sprites/icons";
+import { PixelSprite } from "../pixel/PixelSprite";
+
+export interface WorldCanvasProps {
+  scene: LocationScene;
+  onHotspot: (h: Hotspot) => void;
+  onMiss?: () => void;
+  onBack?: () => void;
+  onEasterEgg?: (egg: EasterEgg) => void;
+  suggestedHotspotId?: string | null;
+  textScale?: number;
+  highContrast?: boolean;
+  reducedMotion?: boolean;
+  timeMode?: TimeMode;
+  weather?: WeatherKind;
+  /** HUD rendered inside the stage overlay, so it shares the canvas coordinate space. */
+  topHud?: React.ReactNode;
+  /** Renders the world with no labels, banner or controls — used behind the title screen. */
+  chromeless?: boolean;
+}
+
+export function WorldCanvas({
+  scene,
+  onHotspot,
+  onMiss,
+  onBack,
+  onEasterEgg,
+  suggestedHotspotId,
+  textScale = 1,
+  highContrast = false,
+  reducedMotion = false,
+  timeMode = "cycle",
+  weather = "clear",
+  topHud,
+  chromeless = false,
+}: WorldCanvasProps) {
+  const groundOriginY = Math.round(scene.horizonRatio * STAGE_H);
+  const [layout, setLayout] = useState<StageLayout>({ left: 0, top: 0, scale: 1 });
+  const [showBanner, setShowBanner] = useState(true);
+  const bannerTimer = useRef<number | null>(null);
+
+  // parallax: layers respond to a slow drift plus the pointer, giving depth
+  // without ever moving the play area the player is aiming at
+  const pointerRef = useRef({ x: 0.5, y: 0.5 });
+  const particlesRef = useRef(new ParticleField());
+  // scratch buffer holding the world above the waterline, so it can be mirrored
+  const reflectBufRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    setShowBanner(true);
+    if (bannerTimer.current) window.clearTimeout(bannerTimer.current);
+    bannerTimer.current = window.setTimeout(() => setShowBanner(false), 3200);
+    return () => {
+      if (bannerTimer.current) window.clearTimeout(bannerTimer.current);
+    };
+  }, [scene.id]);
+
+  const weatherNow = useMemo(() => weatherState(weather), [weather]);
+
+  useEffect(() => {
+    const field = particlesRef.current;
+    field.clear();
+    field.setEmitters([...(scene.emitters ?? []), ...weatherEmitters(weather, STAGE_W)]);
+  }, [scene.id, scene.emitters, weather]);
+
+  const layerW = Math.ceil(STAGE_W * LAYER_OVERSCAN);
+  const skyH = groundOriginY + TILE;
+
+  const layers = useMemo(
+    () => ({
+      clouds: cloudLayer(scene.id, layerW, Math.max(40, skyH * 0.5)),
+      far: farRidgeLayer(scene.id, layerW, skyH),
+      mid: midRidgeLayer(scene.id, layerW, skyH),
+      forest: forestLayer(scene.id, layerW, skyH),
+      terrace: terraceLayer(scene.id, layerW, skyH, scene.terraces),
+    }),
+    [scene.id, scene.terraces, layerW, skyH],
+  );
+
+  function handleFrame(ctx: CanvasRenderingContext2D, time: number) {
+    const t = reducedMotion ? 0 : time;
+    const phase = scene.fixedPhase ?? phaseFor(timeMode, Date.now());
+    const sky = skyStateFor(phase);
+
+    const px = pointerRef.current.x - 0.5;
+    const drift = reducedMotion ? 0 : Math.sin(time / 9000) * 0.5;
+    const par = (depth: number) => -(px * depth * 16 + drift * depth * 10) - (layerW - STAGE_W) / 2;
+
+    ctx.clearRect(0, 0, STAGE_W, STAGE_H);
+
+    // --- BACKGROUND: sky, stars, sun shafts, then parallax ridges
+    drawSky(ctx, sky, STAGE_W, skyH);
+    drawStars(ctx, sky, STAGE_W, skyH, time);
+    drawGodRays(ctx, sky, STAGE_W, skyH, weather === "clear" ? 1 : 0.4);
+
+    ctx.drawImage(layers.clouds, par(0.25), 6 + Math.sin(time / 12000) * 2);
+    ctx.drawImage(layers.far, par(0.4), 0);
+    ctx.drawImage(layers.mid, par(0.7), 0);
+    ctx.drawImage(layers.forest, par(1.0), 0);
+    ctx.drawImage(layers.terrace, par(1.4), 0);
+
+    drawAtmosphericHaze(ctx, sky, STAGE_W, groundOriginY);
+
+    // --- MIDGROUND: the tiled ground the player stands on
+    drawTileGrid(ctx, scene.tileGrid, 0, groundOriginY, t);
+    const gridBottom = groundOriginY + scene.tileGrid.length * TILE;
+    if (gridBottom < STAGE_H) {
+      const lastRow = scene.tileGrid[scene.tileGrid.length - 1];
+      const extraRows = Math.ceil((STAGE_H - gridBottom) / TILE);
+      for (let r = 0; r < extraRows; r++) {
+        const y = gridBottom + r * TILE;
+        for (let gx = 0; gx < lastRow.length; gx++) {
+          ctx.drawImage(tileBitmapFor(lastRow[gx], gx, scene.tileGrid.length + r, t), gx * TILE, y);
+        }
+      }
+    }
+
+    // ground depth shading: darken at the horizon and in the near foreground so the
+    // middle band where people and objects stand reads as the lit, legible stage
+    const depth = ctx.createLinearGradient(0, groundOriginY, 0, STAGE_H);
+    depth.addColorStop(0, "rgba(18,30,20,0.42)");
+    depth.addColorStop(0.18, "rgba(18,30,20,0.10)");
+    depth.addColorStop(0.55, "rgba(255,247,214,0.05)");
+    depth.addColorStop(1, "rgba(10,18,12,0.38)");
+    ctx.fillStyle = depth;
+    ctx.fillRect(0, groundOriginY, STAGE_W, STAGE_H - groundOriginY);
+
+    // --- REFLECTIONS: mirror everything above the waterline into the pond
+    if (scene.waterRect) {
+      const buf = (reflectBufRef.current ??= document.createElement("canvas"));
+      if (buf.width !== STAGE_W || buf.height !== STAGE_H) {
+        buf.width = STAGE_W;
+        buf.height = STAGE_H;
+      }
+      const bctx = buf.getContext("2d")!;
+      bctx.clearRect(0, 0, STAGE_W, STAGE_H);
+      bctx.drawImage(ctx.canvas, 0, 0);
+      drawWaterReflection(ctx, buf, scene.waterRect, time, 0.3);
+      if (weather === "rain") drawRainRipples(ctx, scene.waterRect, time);
+    }
+
+    // --- PLAY AREA: every entity, depth-sorted, with sun-driven cast shadows
+    renderWorldObjects(ctx, scene.objects(t), t, sky);
+
+    // gentle pool of light under each interactive landmark (never button chrome)
+    for (const h of chromeless ? [] : scene.hotspots) {
+      const pulse = reducedMotion ? 0.22 : 0.2 + 0.08 * Math.sin(time / 620 + h.x);
+      const cx = h.x + h.w / 2;
+      const cy = h.y + h.h - 4;
+      ctx.save();
+      ctx.globalAlpha = suggestedHotspotId === h.id ? 0.55 : pulse;
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 22);
+      grad.addColorStop(0, "rgba(255,226,150,0.85)");
+      grad.addColorStop(1, "rgba(255,226,150,0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 22, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // --- ATMOSPHERE: global light wash, lamps, weather, particles
+    ctx.fillStyle = hexA(sky.lightTint, sky.lightAlpha);
+    ctx.fillRect(0, 0, STAGE_W, STAGE_H);
+
+    if (scene.lights) drawLights(ctx, scene.lights, sky, time);
+
+    drawWeatherOverlay(ctx, weatherNow, STAGE_W, STAGE_H, groundOriginY, time);
+
+    if (!reducedMotion) {
+      particlesRef.current.update(time, weatherNow.wind, sky.isNight || sky.lampsOn);
+      particlesRef.current.draw(ctx, STAGE_W, STAGE_H);
+    }
+
+    // vignette focuses attention on the centre of the scene
+    const vig = ctx.createRadialGradient(
+      STAGE_W / 2,
+      STAGE_H * 0.55,
+      STAGE_H * 0.3,
+      STAGE_W / 2,
+      STAGE_H * 0.55,
+      STAGE_W * 0.72,
+    );
+    vig.addColorStop(0, "rgba(0,0,0,0)");
+    vig.addColorStop(1, highContrast ? "rgba(0,0,0,0.55)" : "rgba(0,0,0,0.33)");
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, STAGE_W, STAGE_H);
+  }
+
+  function handlePointerDown(pos: { x: number; y: number }) {
+    if (chromeless) return;
+
+    // labelled destinations always win a tap
+    for (const h of [...scene.hotspots].reverse()) {
+      if (pos.x >= h.x && pos.x <= h.x + h.w && pos.y >= h.y && pos.y <= h.y + h.h) {
+        onHotspot(h);
+        return;
+      }
+    }
+
+    // then the unlabelled delights hidden in the scenery
+    for (const egg of scene.easterEggs ?? []) {
+      if (pos.x >= egg.x && pos.x <= egg.x + egg.w && pos.y >= egg.y && pos.y <= egg.y + egg.h) {
+        particlesRef.current.burst(egg.burst ?? "dust", egg.x + egg.w / 2, egg.y + egg.h / 2, egg.burstCount ?? 10);
+        onEasterEgg?.(egg);
+        return;
+      }
+    }
+
+    onMiss?.();
+  }
+
+  // Stagger neighbouring plaques down a few rows so labels never collide. Busier
+  // places need three rows; a quiet one can sit on a single line.
+  const rowOf = new Map<string, number>();
+  const rowCount = scene.hotspots.length >= 6 ? 3 : scene.hotspots.length >= 4 ? 2 : 1;
+  if (rowCount > 1) {
+    [...scene.hotspots].sort((a, b) => a.x - b.x).forEach((h, i) => rowOf.set(h.id, i % rowCount));
+  }
+
+  const overlay = chromeless ? null : (
+    <div className="relative h-full w-full">
+      {scene.hotspots.map((h) => (
+        <HotspotPlaque
+          key={h.id}
+          hotspot={h}
+          scale={layout.scale}
+          stageWidth={STAGE_W}
+          row={rowOf.get(h.id) ?? 0}
+          suggested={suggestedHotspotId === h.id}
+          onActivate={onHotspot}
+          textScale={textScale}
+          reducedMotion={reducedMotion}
+        />
+      ))}
+
+      {scene.backTo && onBack && (
+        <button
+          onClick={onBack}
+          className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2 rounded-xl px-3 py-2 font-semibold text-[#f7ecd2] transition-transform focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 active:translate-y-0.5"
+          style={{
+            background: "linear-gradient(#6d4a2f,#4a2f1e)",
+            border: "2px solid #2e1c13",
+            boxShadow: "0 3px 0 rgba(0,0,0,0.4), 0 6px 14px rgba(0,0,0,0.35)",
+            fontSize: 14 * textScale,
+          }}
+        >
+          <PixelSprite bitmap={() => iconSprite("back")} scale={1} />
+          Back to Village
+        </button>
+      )}
+
+      {topHud && <div className="pointer-events-none absolute inset-x-0 top-[92px] flex justify-center">{topHud}</div>}
+
+      {/* arrival banner — always name the place you just walked into */}
+      <div
+        className={`pointer-events-none absolute left-1/2 top-5 -translate-x-1/2 transition-all duration-500 ${
+          showBanner ? "opacity-100" : "-translate-y-2 opacity-0"
+        }`}
+      >
+        <div
+          className="rounded-xl px-5 py-2.5 text-center"
+          style={{
+            background: "linear-gradient(#f3e3c3,#e0c896)",
+            border: "2px solid #4a2f1e",
+            boxShadow: "0 4px 0 rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.35)",
+          }}
+        >
+          <div className="font-pixel text-[#3b2a1a]" style={{ fontSize: 11 * textScale }}>
+            {scene.name}
+          </div>
+          <div className="mt-1 text-[#5c4529]" style={{ fontSize: 12.5 * textScale }}>
+            {scene.subtitle}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div
+      className="h-full w-full"
+      onPointerMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        pointerRef.current = { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+      }}
+    >
+      <PixelStage onFrame={handleFrame} onPointerDown={handlePointerDown} onLayout={setLayout} overlay={overlay} />
+    </div>
+  );
+}
+
+function hexA(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${Math.max(0, Math.min(1, alpha))})`;
+}

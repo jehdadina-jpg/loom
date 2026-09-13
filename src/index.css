@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --font-pixel: "Press Start 2P", monospace;
+  --font-body: "Baloo 2", "Segoe UI", system-ui, sans-serif;
+
+  --color-wood-dark: #3e2723;
+  --color-wood: #6d4a34;
+  --color-wood-light: #a3703f;
+  --color-parchment: #f3e3c3;
+  --color-parchment-dark: #e0c896;
+  --color-ink: #2c1e14;
+  --color-loom-amber: #e0a835;
+  --color-loom-amber-dark: #b8791f;
+  --color-leaf: #3f7d40;
+  --color-sky: #a8d8e8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: var(--font-body);
+  background: #0e1a12;
+  color: var(--color-parchment);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-pixel {
+  font-family: var(--font-pixel);
+}
+
+canvas.pixel-canvas {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+::selection {
+  background: var(--color-loom-amber);
+  color: var(--color-ink);
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.82;
+  }
+}
+
+.animate-bob {
+  animation: bob 2.4s ease-in-out infinite;
+}
