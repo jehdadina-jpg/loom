@@ -116,3 +116,23 @@ canvas.pixel-canvas {
 .animate-crossfade {
   animation: crossfade-in 0.35s ease both;
 }
+
+@keyframes cta-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 6px 0 #1d4a22,
+      0 14px 28px rgba(70, 220, 90, 0.32),
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  }
+  50% {
+    box-shadow:
+      0 6px 0 #1d4a22,
+      0 18px 40px rgba(90, 240, 110, 0.55),
+      0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  }
+}
+
+.animate-cta-glow {
+  animation: cta-glow 2.6s ease-in-out infinite;
+}

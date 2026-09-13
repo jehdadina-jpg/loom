@@ -104,6 +104,46 @@ export function drawTileGrid(
       ctx.drawImage(bmp, originX + gx * TILE, originY + gy * TILE);
     }
   }
+  drawGrassWindSweep(ctx, grid, originX, originY, time);
+}
+
+/**
+ * A soft band of light drifts diagonally across the grass every few seconds, like a
+ * breeze passing through. Cheap to draw (one gradient pass, no per-tile recompute) but
+ * it's the single biggest thing that makes the ground read as alive rather than static.
+ */
+function drawGrassWindSweep(ctx: CanvasRenderingContext2D, grid: TileGrid, originX: number, originY: number, time: number) {
+  const rows = grid.length;
+  const cols = grid[0]?.length ?? 0;
+  if (!rows || !cols) return;
+  const w = cols * TILE;
+  const h = rows * TILE;
+
+  const period = 5200;
+  const bandW = w * 0.5;
+  const cyclePos = ((time % period) / period) * (w + bandW) - bandW;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(originX, originY, w, h);
+  ctx.clip();
+  ctx.globalCompositeOperation = "lighter";
+
+  for (let gy = 0; gy < rows; gy++) {
+    const row = grid[gy];
+    for (let gx = 0; gx < cols; gx++) {
+      if (row[gx] !== "grass" && row[gx] !== "flowergrass") continue;
+      const cx = originX + gx * TILE + TILE / 2;
+      const dist = cx - originX - cyclePos;
+      if (Math.abs(dist) > bandW * 0.6) continue;
+      const k = 1 - Math.abs(dist) / (bandW * 0.6);
+      const alpha = Math.max(0, k) * 0.05;
+      if (alpha <= 0.002) continue;
+      ctx.fillStyle = `rgba(220,240,200,${alpha})`;
+      ctx.fillRect(originX + gx * TILE, originY + gy * TILE, TILE, TILE);
+    }
+  }
+  ctx.restore();
 }
 
 export { TILE };

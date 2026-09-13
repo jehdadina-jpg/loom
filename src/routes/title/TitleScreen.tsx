@@ -182,19 +182,27 @@ function TitleButton({
   return (
     <button
       onClick={onClick}
-      className="group relative w-full rounded-xl font-bold text-[#f8eed6] transition-transform focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 active:translate-y-1"
+      className={`group relative w-full overflow-hidden rounded-xl font-bold text-[#f8eed6] transition-transform focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 active:translate-y-1 ${
+        primary ? "animate-cta-glow" : ""
+      }`}
       style={{
         padding: primary ? "14px 24px" : "10px 18px",
         fontSize: (primary ? 20 : 14) * ts,
-        background: primary ? "linear-gradient(#4e9b4b,#2f6b33)" : "linear-gradient(#6d4a2f,#43291a)",
-        border: "3px solid #1c1109",
+        background: primary ? "linear-gradient(180deg,#6bc464,#3f8a3a 50%,#255a26)" : "linear-gradient(#6d4a2f,#43291a)",
+        border: primary ? "3px solid #16330f" : "3px solid #1c1109",
         boxShadow: primary
-          ? "0 6px 0 #1d4a22, 0 12px 24px rgba(0,0,0,0.5)"
+          ? "0 6px 0 #1d4a22, 0 14px 28px rgba(70,220,90,0.35), 0 0 0 1px rgba(255,255,255,0.08) inset"
           : "0 4px 0 #2a1a10, 0 8px 18px rgba(0,0,0,0.45)",
         textShadow: "0 2px 0 rgba(0,0,0,0.45)",
       }}
     >
-      <span className="pointer-events-none absolute inset-x-3 top-1.5 h-1/3 rounded-t-lg bg-white/15" />
+      <span className="pointer-events-none absolute inset-x-3 top-1.5 h-1/3 rounded-t-lg bg-white/25" />
+      {primary && (
+        <span
+          className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+          aria-hidden
+        />
+      )}
       <span className="relative">{label}</span>
     </button>
   );
