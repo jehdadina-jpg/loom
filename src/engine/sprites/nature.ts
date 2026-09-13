@@ -271,3 +271,64 @@ export function pineSprite(variant: number): HTMLCanvasElement {
     }
   });
 }
+
+
+/**
+ * A wide, dense bed of mixed blossoms — several plants of varied height and colour
+ * packed together, the way flowers actually gather along a fence or doorway rather
+ * than standing alone. Reads as "cared-for garden" at a glance.
+ */
+export function flowerBedSprite(seed: number, w = 28): HTMLCanvasElement {
+  return getProceduralBitmap(`flowerbed-${seed}-${w}`, { w, h: 12 }, (ctx) => {
+    const petalColors = [PAL.clothCream, PAL.fruitOrange, PAL.clothMustard, PAL.white, PAL.clothRed, PAL.clothTeal, PAL.clothIndigo];
+    // low leafy base tying the bed together
+    ctx.fillStyle = PAL.leafDark;
+    for (let x = 0; x < w; x += 2) {
+      const h = 2 + Math.floor(hashNoise(x, seed, 3) * 2);
+      ctx.fillRect(x, 12 - h, 2, h);
+    }
+    const blooms = Math.max(4, Math.floor(w / 4));
+    for (let i = 0; i < blooms; i++) {
+      const bx = Math.round((i + 0.5) * (w / blooms) + (hashNoise(i, seed, 11) - 0.5) * 3);
+      const stemH = 4 + Math.floor(hashNoise(i, seed, 5) * 3);
+      const topY = 12 - stemH - 3;
+      ctx.fillStyle = PAL.leafBase;
+      ctx.fillRect(bx, topY + 3, 1, stemH);
+      const c = petalColors[Math.floor(hashNoise(i, seed, 17) * petalColors.length) % petalColors.length];
+      ctx.fillStyle = c;
+      ctx.fillRect(bx - 1, topY, 3, 3);
+      ctx.fillRect(bx, topY - 1, 1, 1);
+      ctx.fillStyle = PAL.cropYellow;
+      ctx.fillRect(bx, topY + 1, 1, 1);
+    }
+  });
+}
+
+/** A small flowering shrub — like bushSprite but topped with a scatter of blossoms. */
+export function bloomingBushSprite(variant: number): HTMLCanvasElement {
+  return getProceduralBitmap(`bloombush-${variant}`, { w: 16, h: 14 }, (ctx) => {
+    ctx.fillStyle = PAL.grassShadow;
+    ctx.globalAlpha = 0.3;
+    ctx.beginPath();
+    ctx.ellipse(8, 13, 6, 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    const blobs: Blob[] = [
+      { dx: 5, dy: 8, rx: 4.5, ry: 4 },
+      { dx: 10, dy: 8.5, rx: 4.8, ry: 4.2 },
+      { dx: 8, dy: 6, rx: 4.5, ry: 3.8 },
+    ];
+    paintOrganicBlobs(ctx, 0, 0, blobs, leafTones, {
+      seed: variant * 13 + 5,
+      textureColor: PAL.leafHi,
+      textureChance: 0.2,
+    });
+    const petalColors = [PAL.clothCream, PAL.fruitOrange, PAL.white, PAL.clothMustard];
+    for (let i = 0; i < 5; i++) {
+      const bx = 3 + Math.floor(hashNoise(i, variant, 7) * 11);
+      const by = 4 + Math.floor(hashNoise(i, variant, 13) * 6);
+      ctx.fillStyle = petalColors[(i + variant) % petalColors.length];
+      ctx.fillRect(bx, by, 2, 2);
+    }
+  });
+}

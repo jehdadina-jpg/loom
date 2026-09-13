@@ -88,6 +88,18 @@ export function WorldCanvas({
   const [layout, setLayout] = useState<StageLayout>({ left: 0, top: 0, scale: 1 });
   const [showBanner, setShowBanner] = useState(true);
   const bannerTimer = useRef<number | null>(null);
+  // measured, not guessed: the guide banner below needs to clear whatever height the
+  // arrival banner actually renders at, which varies with text length and textScale
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const [bannerH, setBannerH] = useState(0);
+
+  useEffect(() => {
+    const el = bannerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setBannerH(entry.contentRect.height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [scene.id, textScale]);
 
   // parallax: layers respond to a slow drift plus the pointer, giving depth
   // without ever moving the play area the player is aiming at
@@ -366,18 +378,24 @@ export function WorldCanvas({
         </button>
       )}
 
-      {topHud && (
-        <div
-          className="pointer-events-none absolute inset-x-0 flex justify-center"
-          style={{ top: (scene.backTo ? 58 : 20) + 56 * textScale }}
-        >
-          {topHud}
-        </div>
-      )}
+      {(() => {
+        const bannerTop = scene.backTo ? 58 : 20;
+        // Fall back to a generous guess for the one frame before ResizeObserver has
+        // measured the real box, so nothing flashes overlapped on mount.
+        const clearance = bannerH > 0 ? bannerTop + bannerH + 14 : bannerTop + 66 * textScale;
+        return (
+          topHud && (
+            <div className="pointer-events-none absolute inset-x-0 flex justify-center" style={{ top: clearance }}>
+              {topHud}
+            </div>
+          )
+        );
+      })()}
 
       {/* arrival banner — always name the place you just walked into. It sits below
           the back button rather than beside it, so a wide button at large text sizes
-          never runs into it. */}
+          never runs into it. Its real rendered height is measured (see bannerRef)
+          so the guide banner below always clears it, at any text scale or wording. */}
       <div
         className={`pointer-events-none absolute left-1/2 -translate-x-1/2 transition-all duration-500 ${
           showBanner ? "opacity-100" : "-translate-y-2 opacity-0"
@@ -385,6 +403,7 @@ export function WorldCanvas({
         style={{ top: scene.backTo ? 58 : 20 }}
       >
         <div
+          ref={bannerRef}
           className="rounded-xl px-5 py-2.5 text-center"
           style={{
             background: "linear-gradient(#f3e3c3,#e0c896)",

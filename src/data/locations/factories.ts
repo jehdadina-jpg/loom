@@ -5,6 +5,8 @@ import {
   bushSprite,
   rockSprite,
   flowerClumpSprite,
+  flowerBedSprite,
+  bloomingBushSprite,
   tallGrassTuftSprite,
   reedSprite,
   bigTreeSprite,
@@ -127,6 +129,12 @@ export function rockObj(x: number, y: number, variant: number): WorldObject {
 }
 export function flowerObj(x: number, y: number, variant: number): WorldObject {
   return worldObj(x, y, outlined(() => flowerClumpSprite(variant)));
+}
+export function flowerBedObj(x: number, y: number, seed: number, w = 28): WorldObject {
+  return worldObj(x, y, outlined(() => flowerBedSprite(seed, w)));
+}
+export function bloomingBushObj(x: number, y: number, variant: number): WorldObject {
+  return worldObj(x, y, outlined(() => bloomingBushSprite(variant)));
 }
 export function grassTuftObj(x: number, y: number, variant: number): WorldObject {
   return worldObj(x, y, outlined(() => tallGrassTuftSprite(variant)));
