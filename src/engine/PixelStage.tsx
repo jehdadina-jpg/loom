@@ -57,7 +57,13 @@ export function PixelStage({
     function applyScale() {
       if (!container || !canvas) return;
       const rect = container.getBoundingClientRect();
-      const scale = Math.max(1, Math.floor(Math.min(rect.width / width, rect.height / height)));
+      // Flooring to a whole integer keeps pixel art perfectly crisp, but on a large
+      // monitor it rounds *down* hard (e.g. 3.9x becomes 3x) and leaves big black
+      // bars around the game. `imageRendering: pixelated` still keeps a fractional
+      // scale looking sharp, so fill the container and only fall back to a whole
+      // step when we're not yet at a useful size.
+      const rawScale = Math.max(1, Math.min(rect.width / width, rect.height / height));
+      const scale = rawScale < 2 ? Math.max(1, Math.floor(rawScale)) : rawScale;
       canvas.style.width = `${width * scale}px`;
       canvas.style.height = `${height * scale}px`;
       const next = {
