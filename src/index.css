@@ -73,3 +73,46 @@ canvas.pixel-canvas {
 .animate-bob {
   animation: bob 2.4s ease-in-out infinite;
 }
+
+@keyframes panel-in {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes crossfade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-panel-in {
+  animation: panel-in 0.28s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.animate-toast-in {
+  animation: toast-in 0.32s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.animate-crossfade {
+  animation: crossfade-in 0.35s ease both;
+}

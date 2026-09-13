@@ -92,7 +92,10 @@ export function TitleScreen({ onPlay, onContinue, onCaregiver }: TitleScreenProp
         }}
       />
 
-      <div className="relative flex h-full w-full flex-col items-center justify-center px-6">
+      <div
+        className="relative flex h-full w-full flex-col items-center justify-center px-6"
+        style={{ paddingBottom: 44 * ts }}
+      >
         <div className={settings.reducedMotion ? "" : "animate-bob"}>
           <PixelSprite bitmap={loomLogo} scale={2} className="drop-shadow-[0_6px_10px_rgba(0,0,0,0.6)]" />
         </div>

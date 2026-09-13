@@ -17,7 +17,7 @@ export interface GuideBarProps {
  */
 export function GuideBar({ prompt, targetLocation, hereAlready, onGo, textScale = 1 }: GuideBarProps) {
   return (
-    <div className="pointer-events-auto">
+    <div className="pointer-events-auto animate-panel-in">
       <div
         className="flex items-center gap-3 rounded-xl px-4 py-3"
         style={{
@@ -27,7 +27,7 @@ export function GuideBar({ prompt, targetLocation, hereAlready, onGo, textScale 
         }}
       >
         <PixelSprite bitmap={() => iconSprite(iconForLocation(targetLocation))} scale={2} />
-        <span className="font-semibold text-[#3b2a1a]" style={{ fontSize: 15.5 * textScale }}>
+        <span key={prompt} className="animate-crossfade font-semibold text-[#3b2a1a]" style={{ fontSize: 15.5 * textScale }}>
           {prompt}
         </span>
         {!hereAlready && onGo && (

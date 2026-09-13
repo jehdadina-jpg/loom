@@ -242,7 +242,7 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
         </button>
         {timeLabel && (
           <span
-            className="rounded-md px-2 py-1 text-parchment shadow-lg"
+            className="animate-toast-in rounded-md px-2 py-1 text-parchment shadow-lg"
             style={{ background: "rgba(20,14,9,0.8)", fontSize: 12 * settings.textScale }}
           >
             {timeLabel}
@@ -254,7 +254,7 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
       {toast && (
         <div key={toast.id} className="pointer-events-none absolute bottom-20 left-1/2 -translate-x-1/2 px-4">
           <div
-            className="rounded-xl px-4 py-2.5 text-center shadow-2xl"
+            className="animate-toast-in rounded-xl px-4 py-2.5 text-center shadow-2xl"
             style={{
               background: "linear-gradient(#f3e3c3,#e0c896)",
               border: "2px solid #4a2f1e",
@@ -278,19 +278,27 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
       />
 
       {dialogueNpc && (
-        <DialogueOverlay npcId={dialogueNpc} locationId={locationId} onClose={() => setDialogueNpc(null)} />
+        <div key={dialogueNpc} className="animate-crossfade">
+          <DialogueOverlay npcId={dialogueNpc} locationId={locationId} onClose={() => setDialogueNpc(null)} />
+        </div>
       )}
 
       {activity && (
-        <ActivityOverlay
-          activity={activity}
-          locationId={locationId}
-          onClose={() => setActivityId(null)}
-          onComplete={() => setActivityId(null)}
-        />
+        <div key={activity.id} className="animate-crossfade">
+          <ActivityOverlay
+            activity={activity}
+            locationId={locationId}
+            onClose={() => setActivityId(null)}
+            onComplete={() => setActivityId(null)}
+          />
+        </div>
       )}
 
-      {comfortOpen && <ComfortPanel locationId={locationId} onClose={() => setComfortOpen(false)} />}
+      {comfortOpen && (
+        <div className="animate-crossfade">
+          <ComfortPanel locationId={locationId} onClose={() => setComfortOpen(false)} />
+        </div>
+      )}
     </div>
   );
 }

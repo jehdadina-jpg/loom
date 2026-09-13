@@ -97,6 +97,11 @@ export function WorldCanvas({
   const reflectBufRef = useRef<HTMLCanvasElement | null>(null);
   // the moment we last arrived somewhere, so entry can ease to rest instead of snapping
   const enterAtRef = useRef(performance.now());
+  // the sky eases toward whatever phase is requested instead of snapping to it, so
+  // tapping the day/night control is a dusk-like transition, not a hard cut
+  const displayPhaseRef = useRef<number | null>(null);
+  // the gloom from weather (rain/mist darkening) also eases in and out
+  const displayGloomRef = useRef(0);
 
   useEffect(() => {
     setShowBanner(true);
@@ -134,7 +139,16 @@ export function WorldCanvas({
 
   function handleFrame(ctx: CanvasRenderingContext2D, time: number) {
     const t = reducedMotion ? 0 : time;
-    const phase = scene.fixedPhase ?? phaseFor(timeMode, Date.now());
+    const targetPhase = scene.fixedPhase ?? phaseFor(timeMode, Date.now());
+    if (displayPhaseRef.current === null || reducedMotion) {
+      displayPhaseRef.current = targetPhase;
+    } else {
+      // shortest arc around the 0..1 day circle, eased toward the target each frame
+      let delta = targetPhase - displayPhaseRef.current;
+      delta -= Math.round(delta);
+      displayPhaseRef.current = (((displayPhaseRef.current + delta * 0.045) % 1) + 1) % 1;
+    }
+    const phase = displayPhaseRef.current;
     const sky = skyStateFor(phase);
 
     const px = pointerRef.current.x - 0.5;
@@ -237,7 +251,9 @@ export function WorldCanvas({
 
     if (scene.lights) drawLights(ctx, scene.lights, sky, time);
 
-    drawWeatherOverlay(ctx, weatherNow, STAGE_W, STAGE_H, groundOriginY, time);
+    displayGloomRef.current += (weatherNow.gloom - displayGloomRef.current) * (reducedMotion ? 1 : 0.06);
+    const easedWeather = { ...weatherNow, gloom: displayGloomRef.current };
+    drawWeatherOverlay(ctx, easedWeather, STAGE_W, STAGE_H, groundOriginY, time);
 
     if (!reducedMotion) {
       particlesRef.current.update(time, weatherNow.wind, sky.isNight || sky.lampsOn);
@@ -337,7 +353,7 @@ export function WorldCanvas({
       {scene.backTo && onBack && (
         <button
           onClick={onBack}
-          className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2 rounded-xl px-3 py-2 font-semibold text-[#f7ecd2] transition-transform focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 active:translate-y-0.5"
+          className="pointer-events-auto absolute left-3 top-3 z-10 flex items-center gap-2 rounded-xl px-3 py-2 font-semibold text-[#f7ecd2] transition-transform focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 active:translate-y-0.5"
           style={{
             background: "linear-gradient(#6d4a2f,#4a2f1e)",
             border: "2px solid #2e1c13",
@@ -350,13 +366,23 @@ export function WorldCanvas({
         </button>
       )}
 
-      {topHud && <div className="pointer-events-none absolute inset-x-0 top-[92px] flex justify-center">{topHud}</div>}
+      {topHud && (
+        <div
+          className="pointer-events-none absolute inset-x-0 flex justify-center"
+          style={{ top: (scene.backTo ? 58 : 20) + 56 * textScale }}
+        >
+          {topHud}
+        </div>
+      )}
 
-      {/* arrival banner — always name the place you just walked into */}
+      {/* arrival banner — always name the place you just walked into. It sits below
+          the back button rather than beside it, so a wide button at large text sizes
+          never runs into it. */}
       <div
-        className={`pointer-events-none absolute left-1/2 top-5 -translate-x-1/2 transition-all duration-500 ${
+        className={`pointer-events-none absolute left-1/2 -translate-x-1/2 transition-all duration-500 ${
           showBanner ? "opacity-100" : "-translate-y-2 opacity-0"
         }`}
+        style={{ top: scene.backTo ? 58 : 20 }}
       >
         <div
           className="rounded-xl px-5 py-2.5 text-center"

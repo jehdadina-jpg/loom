@@ -65,12 +65,14 @@ export function CareRoute({ onBackToPlay, onBackToTitle }: CareRouteProps) {
         </div>
       </div>
 
-      {tab === "caregiver" && <CaregiverDashboard />}
-      {tab === "asha" && <AshaDashboard />}
-      {tab === "album" && <AlbumPanel />}
-      {tab === "photos" && <PhotosPanel />}
-      {tab === "people" && <PeoplePanel />}
-      {tab === "settings" && <SettingsPanel />}
+      <div key={tab} className="animate-crossfade">
+        {tab === "caregiver" && <CaregiverDashboard />}
+        {tab === "asha" && <AshaDashboard />}
+        {tab === "album" && <AlbumPanel />}
+        {tab === "photos" && <PhotosPanel />}
+        {tab === "people" && <PeoplePanel />}
+        {tab === "settings" && <SettingsPanel />}
+      </div>
     </div>
   );
 }
