@@ -815,6 +815,7 @@ const buildCommunity: LocationBuilder = (_pack, seed) => {
       { id: "firepit-ember", kind: "ember", x: 244, y: 250, rate: 3, spreadX: 6 },
       { id: "tree-leaves", kind: "leaf", x: 300, y: 190, rate: 0.5, spreadX: 60, spreadY: 20, dayOnly: true },
       { id: "comm-flies", kind: "firefly", x: 256, y: 240, rate: 2, spreadX: 380, spreadY: 44, nightOnly: true },
+      { id: "comm-blossom", kind: "leaf", x: 256, y: 180, rate: 0.6, spreadX: 420, spreadY: 10, dayOnly: true },
     ],
     objects: () => [
       bigTreeObj(256, 190, 7),
@@ -907,6 +908,7 @@ const buildGarden: LocationBuilder = (_pack, seed) => {
       { id: "garden-butterfly", kind: "butterfly", x: -10, y: 240, rate: 0.45, spreadY: 40, dayOnly: true },
       { id: "garden-motes", kind: "dust", x: 256, y: 244, rate: 1.8, spreadX: 400, spreadY: 40, dayOnly: true },
       { id: "garden-flies", kind: "firefly", x: 256, y: 240, rate: 1.8, spreadX: 400, spreadY: 44, nightOnly: true },
+      { id: "garden-blossom", kind: "leaf", x: 256, y: 190, rate: 0.5, spreadX: 400, spreadY: 10, dayOnly: true },
     ],
     objects: () => [
       fenceObj(68, 204, 0),

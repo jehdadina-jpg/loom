@@ -45,6 +45,25 @@ export function drawWeatherOverlay(
     ctx.fillRect(0, 0, w, h);
   }
 
+  if (state.kind === "rain") {
+    // faint wet-ground glints along the foreground, catching whatever light there is
+    ctx.save();
+    ctx.globalAlpha = 0.16;
+    ctx.strokeStyle = "#cfe6ef";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 7; i++) {
+      const seed = i * 53.7;
+      const x = ((seed * 41) % w) + (((time / 2600) * 30) % 14);
+      const y = h - 6 - ((seed * 13) % 10);
+      const len = 10 + ((seed * 7) % 14);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + len, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   if (state.kind === "mist") {
     // soft horizontal bands drifting across the middle distance
     for (let i = 0; i < 4; i++) {

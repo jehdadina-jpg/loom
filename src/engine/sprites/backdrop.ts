@@ -161,6 +161,30 @@ export function drawAtmosphericHaze(ctx: CanvasRenderingContext2D, sky: SkyState
   ctx.fillRect(0, groundY - 46, w, 52);
 }
 
+/** Soft drifting shadow blobs cast on the ground by unseen clouds overhead. */
+export function drawCloudShadows(ctx: CanvasRenderingContext2D, w: number, groundY: number, stageH: number, time: number) {
+  ctx.save();
+  ctx.globalCompositeOperation = "multiply";
+  const blobs = 3;
+  for (let i = 0; i < blobs; i++) {
+    const speed = 5200 + i * 1700;
+    const span = w + 220;
+    const x = (((time / speed) * span + i * 260) % span) - 110;
+    const y = groundY + 14 + i * 26;
+    const rx = 46 + i * 10;
+    const ry = 16 + i * 3;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, rx);
+    grad.addColorStop(0, "rgba(20,28,22,0.14)");
+    grad.addColorStop(1, "rgba(20,28,22,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  void stageH;
+}
+
 function hexA(hex: string, alpha: number): string {
   const h = hex.replace("#", "");
   const r = parseInt(h.slice(0, 2), 16);

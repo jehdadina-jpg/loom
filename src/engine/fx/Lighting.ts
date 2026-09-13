@@ -121,6 +121,46 @@ export function drawCastShadow(
 }
 
 /** Star field, only visible once the sky is dark enough to carry it. */
+/** A warm streak-and-ring flare when the sun sits low, strongest at golden hour. */
+export function drawLensFlare(ctx: CanvasRenderingContext2D, sky: SkyState, w: number, skyH: number) {
+  if (sky.isNight) return;
+  const lowness = 1 - Math.min(1, Math.abs(sky.sunY - 0.5) < 0.5 ? sky.sunY * 2 : 1);
+  const strength = Math.max(0, 1 - sky.sunY * 2.1);
+  if (strength <= 0.04) return;
+  const sx = sky.sunX * w;
+  const sy = sky.sunY * skyH;
+  const cx = w / 2;
+  const cy = skyH * 0.5;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+
+  // horizontal streak through the sun disc
+  const streak = ctx.createLinearGradient(sx - 70, sy, sx + 70, sy);
+  streak.addColorStop(0, hexWithAlpha(sky.sunColor, 0));
+  streak.addColorStop(0.5, hexWithAlpha(sky.sunColor, 0.22 * strength));
+  streak.addColorStop(1, hexWithAlpha(sky.sunColor, 0));
+  ctx.fillStyle = streak;
+  ctx.fillRect(sx - 70, sy - 1, 140, 2);
+
+  // ghost rings marching toward the frame centre, classic lens-flare read
+  for (let i = 1; i <= 3; i++) {
+    const k = i / 4;
+    const gx = sx + (cx - sx) * k;
+    const gy = sy + (cy - sy) * k;
+    const r = 3 + i * 3;
+    const ring = ctx.createRadialGradient(gx, gy, 0, gx, gy, r);
+    ring.addColorStop(0, hexWithAlpha(sky.sunColor, 0.16 * strength * (1 - k * 0.5)));
+    ring.addColorStop(1, hexWithAlpha(sky.sunColor, 0));
+    ctx.fillStyle = ring;
+    ctx.beginPath();
+    ctx.arc(gx, gy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  void lowness;
+}
+
 export function drawStars(ctx: CanvasRenderingContext2D, sky: SkyState, w: number, skyH: number, time: number) {
   if (sky.starAlpha <= 0.02) return;
   ctx.save();

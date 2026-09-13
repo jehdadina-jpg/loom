@@ -253,9 +253,14 @@ export class ParticleField {
         ctx.fillRect(Math.round(p.x) + 2, Math.round(p.y), 1, flap);
         ctx.fillRect(Math.round(p.x) + 1, Math.round(p.y), 1, 1);
       } else if (p.kind === "firefly") {
-        ctx.fillRect(Math.round(p.x), Math.round(p.y), 1, 1);
-        ctx.globalAlpha = alpha * 0.3;
-        ctx.fillRect(Math.round(p.x) - 1, Math.round(p.y) - 1, 3, 3);
+        const fx = Math.round(p.x);
+        const fy = Math.round(p.y);
+        ctx.globalAlpha = alpha * 0.16;
+        ctx.fillRect(fx - 3, fy - 3, 7, 7);
+        ctx.globalAlpha = alpha * 0.32;
+        ctx.fillRect(fx - 1, fy - 1, 3, 3);
+        ctx.globalAlpha = alpha;
+        ctx.fillRect(fx, fy, 1, 1);
       } else {
         ctx.fillRect(Math.round(p.x), Math.round(p.y), size, size);
       }

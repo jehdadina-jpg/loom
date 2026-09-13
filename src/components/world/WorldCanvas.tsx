@@ -12,6 +12,7 @@ import {
   foregroundFoliageLayer,
   drawWaterfall,
   drawBirdFlock,
+  drawCloudShadows,
   LAYER_OVERSCAN,
 } from "../../engine/sprites/backdrop";
 import { drawTileGrid, tileBitmapFor, TILE } from "../../engine/tilemap";
@@ -19,7 +20,7 @@ import { renderWorldObjects } from "../../engine/world";
 import { skyStateFor, phaseFor, type TimeMode } from "../../engine/fx/DayNight";
 import { ParticleField } from "../../engine/fx/Particles";
 import { weatherState, weatherEmitters, drawWeatherOverlay, drawRainRipples, type WeatherKind } from "../../engine/fx/Weather";
-import { drawLights, drawGodRays, drawStars, drawWaterReflection } from "../../engine/fx/Lighting";
+import { drawLights, drawGodRays, drawStars, drawWaterReflection, drawLensFlare } from "../../engine/fx/Lighting";
 import type { LocationScene, Hotspot, EasterEgg } from "../../data/locations/types";
 import { HotspotPlaque } from "./HotspotPlaque";
 import { iconSprite } from "../../engine/sprites/icons";
@@ -41,6 +42,31 @@ export interface WorldCanvasProps {
   topHud?: React.ReactNode;
   /** Renders the world with no labels, banner or controls — used behind the title screen. */
   chromeless?: boolean;
+}
+
+/** A soft diagonal shimmer that drifts across any water tiles in the scene. */
+function drawWaterCaustics(ctx: CanvasRenderingContext2D, grid: string[][], originY: number, time: number, isNight: boolean) {
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = isNight ? 0.05 : 0.09;
+  ctx.fillStyle = "#eafcff";
+  for (let gy = 0; gy < grid.length; gy++) {
+    const row = grid[gy];
+    for (let gx = 0; gx < row.length; gx++) {
+      if (!row[gx].startsWith("water")) continue;
+      const wx = gx * TILE;
+      const wy = originY + gy * TILE;
+      const shift = ((time / 1400 + gx * 0.6 + gy * 0.35) % 1) * TILE * 1.6 - TILE * 0.3;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(wx, wy, TILE, TILE);
+      ctx.clip();
+      ctx.fillRect(wx + shift, wy, 4, TILE);
+      ctx.fillRect(wx + shift + TILE * 0.7, wy, 3, TILE);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
 }
 
 export function WorldCanvas({
@@ -69,9 +95,12 @@ export function WorldCanvas({
   const particlesRef = useRef(new ParticleField());
   // scratch buffer holding the world above the waterline, so it can be mirrored
   const reflectBufRef = useRef<HTMLCanvasElement | null>(null);
+  // the moment we last arrived somewhere, so entry can ease to rest instead of snapping
+  const enterAtRef = useRef(performance.now());
 
   useEffect(() => {
     setShowBanner(true);
+    enterAtRef.current = performance.now();
     if (bannerTimer.current) window.clearTimeout(bannerTimer.current);
     bannerTimer.current = window.setTimeout(() => setShowBanner(false), 3200);
     return () => {
@@ -110,7 +139,12 @@ export function WorldCanvas({
 
     const px = pointerRef.current.x - 0.5;
     const drift = reducedMotion ? 0 : Math.sin(time / 9000) * 0.5;
-    const par = (depth: number) => -(px * depth * 16 + drift * depth * 10) - (layerW - STAGE_W) / 2;
+    // a slow settling drift on arrival — the world eases to rest instead of snapping in,
+    // giving every new place a gentle "camera landing" moment
+    const sinceEnter = reducedMotion ? 999999 : performance.now() - enterAtRef.current;
+    const enterEase = Math.max(0, 1 - sinceEnter / 1100);
+    const enterPush = enterEase * enterEase * 10;
+    const par = (depth: number) => -(px * depth * 16 + drift * depth * 10 + enterPush * depth) - (layerW - STAGE_W) / 2;
 
     ctx.clearRect(0, 0, STAGE_W, STAGE_H);
 
@@ -118,6 +152,7 @@ export function WorldCanvas({
     drawSky(ctx, sky, STAGE_W, skyH);
     drawStars(ctx, sky, STAGE_W, skyH, time);
     drawGodRays(ctx, sky, STAGE_W, skyH, weather === "clear" ? 1 : 0.4);
+    drawLensFlare(ctx, sky, STAGE_W, skyH);
 
     ctx.drawImage(layers.clouds, par(0.25), 6 + Math.sin(time / 12000) * 2);
     if (!sky.isNight) drawBirdFlock(ctx, STAGE_W, skyH, time);
@@ -138,6 +173,8 @@ export function WorldCanvas({
 
     // --- MIDGROUND: the tiled ground the player stands on
     drawTileGrid(ctx, scene.tileGrid, 0, groundOriginY, t);
+    if (weather === "clear" && !sky.isNight) drawCloudShadows(ctx, STAGE_W, groundOriginY, STAGE_H, t);
+    drawWaterCaustics(ctx, scene.tileGrid, groundOriginY, t, sky.isNight);
     const gridBottom = groundOriginY + scene.tileGrid.length * TILE;
     if (gridBottom < STAGE_H) {
       const lastRow = scene.tileGrid[scene.tileGrid.length - 1];
@@ -241,7 +278,12 @@ export function WorldCanvas({
     // then the unlabelled delights hidden in the scenery
     for (const egg of scene.easterEggs ?? []) {
       if (pos.x >= egg.x && pos.x <= egg.x + egg.w && pos.y >= egg.y && pos.y <= egg.y + egg.h) {
-        particlesRef.current.burst(egg.burst ?? "dust", egg.x + egg.w / 2, egg.y + egg.h / 2, egg.burstCount ?? 10);
+        const bx = egg.x + egg.w / 2;
+        const by = egg.y + egg.h / 2;
+        particlesRef.current.burst(egg.burst ?? "dust", bx, by, egg.burstCount ?? 10);
+        // a second, sparser burst of light dust always joins in so every find feels a
+        // little magical, not just a repeat of whatever the egg's own burst kind is
+        particlesRef.current.burst("dust", bx, by, Math.max(4, Math.round((egg.burstCount ?? 10) * 0.4)));
         onEasterEgg?.(egg);
         return;
       }

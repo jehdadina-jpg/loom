@@ -13,6 +13,8 @@ import { useSession } from "../../game/session/SessionContext";
 import { audioEngine } from "../../game/audio/AudioEngine";
 import { speechEngine } from "../../game/speech/SpeechEngine";
 import type { EasterEgg, Hotspot, LocationId } from "../../data/locations/types";
+import { ChapterCard } from "../../components/story/ChapterCard";
+import { chapterForGuideIndex } from "../../data/story";
 import { PixelSprite } from "../../components/pixel/PixelSprite";
 import { iconSprite, type IconName } from "../../engine/sprites/icons";
 import type { TimeMode } from "../../engine/fx/DayNight";
@@ -48,6 +50,9 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
   const missesRef = useRef(0);
   const navStartRef = useRef(Date.now());
   const holdTimer = useRef<number | null>(null);
+  // a brief black wipe between places, so travelling through the village feels like a
+  // scene change rather than an instant teleport
+  const [wiping, setWiping] = useState(false);
 
   const pack = useMemo(() => getPack(settings.communityPackId), [settings.communityPackId]);
   const seed = useMemo(() => todaySeed(), []);
@@ -88,8 +93,12 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
     missesRef.current = 0;
     navStartRef.current = Date.now();
     audioEngine.tap();
-    setLocationId(to);
-    setDialogueNpc(null);
+    setWiping(true);
+    window.setTimeout(() => {
+      setLocationId(to);
+      setDialogueNpc(null);
+      window.setTimeout(() => setWiping(false), 40);
+    }, 160);
   }
 
   function handleHotspot(h: Hotspot) {
@@ -147,6 +156,11 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
   const activity = activityId ? getActivity(activityId) : undefined;
   const overlayOpen = !!activity || comfortOpen || !!dialogueNpc;
 
+  // story mode: once per chapter, a title card frames what's about to happen —
+  // purely narrative, it never gates or blocks the guide banner underneath it
+  const currentChapter = settings.guideMode ? chapterForGuideIndex(session.guideIndex) : null;
+  const chapterCard = currentChapter && !session.seenChapters.includes(currentChapter.id) && !overlayOpen ? currentChapter : null;
+
   // the guide only ever points at one thing, never while something else is on screen,
   // and never in a place whose whole purpose is to have nothing to do
   const guideStep = settings.guideMode && !overlayOpen && !scene.noGuide ? session.guideStep : null;
@@ -156,6 +170,19 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#0e1a12]">
+      <div
+        className={`pointer-events-none absolute inset-0 z-[60] bg-black transition-opacity duration-200 ${
+          wiping ? "opacity-100" : "opacity-0"
+        }`}
+      />
+      {chapterCard && (
+        <ChapterCard
+          chapter={chapterCard}
+          narrationEnabled={settings.narration}
+          textScale={settings.textScale}
+          onContinue={() => session.markChapterSeen(chapterCard.id)}
+        />
+      )}
       <WorldCanvas
         scene={scene}
         onHotspot={handleHotspot}

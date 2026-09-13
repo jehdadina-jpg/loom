@@ -117,7 +117,7 @@ export function DialogueOverlay({ npcId, locationId, onClose }: DialogueOverlayP
         <div className="flex gap-4">
           <div className="flex shrink-0 flex-col items-center">
             <div className="rounded-lg p-1" style={{ background: "rgba(74,47,30,0.16)" }}>
-              <PixelSprite animated scale={3} bitmap={portrait} />
+              <PixelSprite animated scale={4} bitmap={portrait} />
             </div>
             <span className="font-pixel mt-1.5 text-[#3b2a1a]" style={{ fontSize: 8 * ts }}>
               {npc.name}

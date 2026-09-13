@@ -40,6 +40,8 @@ interface SessionState {
   foundEggs: string[];
   /** Advances after each finished activity so plaques offer something new next visit. */
   rotation: number;
+  /** Story chapter cards already shown, so a chapter only opens with a title card once. */
+  seenChapters: string[];
 }
 
 const STORAGE_KEY = "loom_session_v1";
@@ -55,12 +57,13 @@ function load(key: string): SessionState {
         lastLocation: parsed.lastLocation ?? "path",
         foundEggs: parsed.foundEggs ?? [],
         rotation: parsed.rotation ?? 0,
+        seenChapters: parsed.seenChapters ?? [],
       };
     }
   } catch {
     // fall through to defaults
   }
-  return { guideIndex: 0, memories: [], lastLocation: "path", foundEggs: [], rotation: 0 };
+  return { guideIndex: 0, memories: [], lastLocation: "path", foundEggs: [], rotation: 0, seenChapters: [] };
 }
 
 interface SessionContextValue {
@@ -77,6 +80,8 @@ interface SessionContextValue {
   foundEggs: string[];
   noteEggFound: (id: string) => void;
   rotation: number;
+  seenChapters: string[];
+  markChapterSeen: (id: string) => void;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -128,6 +133,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setState((s) => (s.foundEggs.includes(id) ? s : { ...s, foundEggs: [...s.foundEggs, id] }));
   }, []);
 
+  const markChapterSeen = useCallback((id: string) => {
+    setState((s) => (s.seenChapters.includes(id) ? s : { ...s, seenChapters: [...s.seenChapters, id] }));
+  }, []);
+
   const setLastLocation = useCallback((id: LocationId) => setState((s) => ({ ...s, lastLocation: id })), []);
   const restartGuide = useCallback(() => setState((s) => ({ ...s, guideIndex: 0 })), []);
   const clearMemories = useCallback(() => setState((s) => ({ ...s, memories: [] })), []);
@@ -147,8 +156,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       foundEggs: state.foundEggs,
       noteEggFound,
       rotation: state.rotation,
+      seenChapters: state.seenChapters,
+      markChapterSeen,
     }),
-    [state, setLastLocation, addMemory, noteArrival, noteActivityComplete, restartGuide, clearMemories, noteEggFound],
+    [state, setLastLocation, addMemory, noteArrival, noteActivityComplete, restartGuide, clearMemories, noteEggFound, markChapterSeen],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
