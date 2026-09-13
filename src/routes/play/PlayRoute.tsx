@@ -278,13 +278,13 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
       />
 
       {dialogueNpc && (
-        <div key={dialogueNpc} className="animate-crossfade">
+        <div key={dialogueNpc} className="relative z-40 animate-crossfade">
           <DialogueOverlay npcId={dialogueNpc} locationId={locationId} onClose={() => setDialogueNpc(null)} />
         </div>
       )}
 
       {activity && (
-        <div key={activity.id} className="animate-crossfade">
+        <div key={activity.id} className="relative z-40 animate-crossfade">
           <ActivityOverlay
             activity={activity}
             locationId={locationId}
@@ -295,7 +295,7 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
       )}
 
       {comfortOpen && (
-        <div className="animate-crossfade">
+        <div className="relative z-40 animate-crossfade">
           <ComfortPanel locationId={locationId} onClose={() => setComfortOpen(false)} />
         </div>
       )}
