@@ -108,11 +108,11 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
   }
 
   function handleEasterEgg(egg: EasterEgg) {
-    const isNew = session.noteEggFound(egg.id);
+    session.noteEggFound(egg.id);
     if (egg.sound === "confirm") audioEngine.confirm();
     else audioEngine.tap();
     speechEngine.speak(egg.line);
-    setToast({ id: `${egg.id}-${Date.now()}`, line: isNew ? egg.line : egg.line });
+    setToast({ id: `${egg.id}-${Date.now()}`, line: egg.line });
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), 3600);
   }

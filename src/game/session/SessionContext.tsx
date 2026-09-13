@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { LocationId } from "../../data/locations/types";
 import { useProfile, scopedKey } from "../profiles/ProfileContext";
 
@@ -75,7 +75,7 @@ interface SessionContextValue {
   restartGuide: () => void;
   clearMemories: () => void;
   foundEggs: string[];
-  noteEggFound: (id: string) => boolean;
+  noteEggFound: (id: string) => void;
   rotation: number;
 }
 
@@ -86,11 +86,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const key = scopedKey(STORAGE_KEY, activeId);
   const [state, setState] = useState<SessionState>(() => load(key));
 
+  const loadedKeyRef = useRef(key);
   useEffect(() => {
     setState(load(scopedKey(STORAGE_KEY, activeId)));
+    loadedKeyRef.current = scopedKey(STORAGE_KEY, activeId);
   }, [activeId]);
 
   useEffect(() => {
+    if (loadedKeyRef.current !== key) return;
     try {
       localStorage.setItem(key, JSON.stringify(state));
     } catch {
@@ -121,15 +124,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  /** Returns true the first time a given delight is found, so it can be celebrated once. */
   const noteEggFound = useCallback((id: string) => {
-    let isNew = false;
-    setState((s) => {
-      if (s.foundEggs.includes(id)) return s;
-      isNew = true;
-      return { ...s, foundEggs: [...s.foundEggs, id] };
-    });
-    return isNew;
+    setState((s) => (s.foundEggs.includes(id) ? s : { ...s, foundEggs: [...s.foundEggs, id] }));
   }, []);
 
   const setLastLocation = useCallback((id: LocationId) => setState((s) => ({ ...s, lastLocation: id })), []);

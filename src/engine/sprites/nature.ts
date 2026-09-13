@@ -164,3 +164,110 @@ export function reedSprite(variant: number): HTMLCanvasElement {
     }
   });
 }
+
+
+/** A big, clustered canopy tree in the spirit of classic 16-bit forests. */
+export function bigTreeSprite(variant: number): HTMLCanvasElement {
+  return getProceduralBitmap(`bigtree-${variant}`, { w: 46, h: 62 }, (ctx) => {
+    const cx = 23;
+    ctx.fillStyle = PAL.grassShadow;
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.ellipse(cx, 59, 14, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // trunk with root flare
+    for (let y = 38; y < 60; y++) {
+      const t = (y - 38) / 22;
+      const halfW = 2.4 + t * 2.2 + (y > 55 ? (y - 55) * 1.2 : 0);
+      const l = Math.round(cx - halfW);
+      const r = Math.round(cx + halfW);
+      for (let x = l; x <= r; x++) {
+        const rel = (x - l) / Math.max(1, r - l);
+        ctx.fillStyle = rel < 0.3 ? PAL.trunkBase : rel < 0.7 ? PAL.trunkDark : PAL.trunkShadow;
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+    ctx.fillStyle = PAL.trunkShadow;
+    for (let i = 0; i < 8; i++) ctx.fillRect(cx - 2 + Math.floor(hashNoise(i, variant, 5) * 4), 40 + i * 2, 1, 1);
+
+    // canopy: several distinct leaf clumps, each shaded, stacked into a crown
+    const clumps: Blob[] = [
+      { dx: cx, dy: 12, rx: 11, ry: 9 },
+      { dx: cx - 12, dy: 22, rx: 10, ry: 8 },
+      { dx: cx + 12, dy: 21, rx: 10, ry: 8 },
+      { dx: cx - 5, dy: 31, rx: 11, ry: 8 },
+      { dx: cx + 7, dy: 32, rx: 10, ry: 7.5 },
+      { dx: cx, dy: 22, rx: 9, ry: 8 },
+    ];
+    for (const c of clumps) {
+      paintOrganicBlobs(ctx, 0, 0, [c], leafTones, {
+        seed: variant * 7 + Math.round(c.dx + c.dy),
+        textureColor: PAL.leafHi,
+        textureChance: 0.05,
+      });
+    }
+    // clump separation so the crown reads as distinct masses
+    ctx.fillStyle = PAL.leafShadow;
+    ctx.globalAlpha = 0.5;
+    for (const c of clumps.slice(1)) {
+      for (let a = Math.PI * 0.15; a < Math.PI * 0.85; a += 0.25) {
+        ctx.fillRect(Math.round(c.dx + Math.cos(a) * c.rx), Math.round(c.dy - Math.sin(a) * c.ry), 1, 1);
+      }
+    }
+    ctx.globalAlpha = 1;
+    if (variant % 2 === 0) {
+      ctx.fillStyle = PAL.fruitRed;
+      for (let i = 0; i < 6; i++) {
+        ctx.fillRect(
+          cx - 14 + Math.floor(hashNoise(i, variant, 44) * 28),
+          10 + Math.floor(hashNoise(i, variant, 55) * 24),
+          2,
+          2,
+        );
+      }
+    }
+  });
+}
+
+/** Tall conifer for the hillside edges. */
+export function pineSprite(variant: number): HTMLCanvasElement {
+  return getProceduralBitmap(`pine-${variant}`, { w: 26, h: 58 }, (ctx) => {
+    const cx = 13;
+    ctx.fillStyle = PAL.trunkDark;
+    ctx.fillRect(cx - 2, 44, 4, 14);
+    ctx.fillStyle = PAL.trunkShadow;
+    ctx.fillRect(cx + 1, 44, 1, 14);
+    const tiers = [
+      { y: 44, w: 24 },
+      { y: 34, w: 20 },
+      { y: 24, w: 16 },
+      { y: 14, w: 11 },
+      { y: 6, w: 6 },
+    ];
+    for (const t of tiers) {
+      for (let row = 0; row < 12; row++) {
+        const y = t.y - row;
+        const halfW = (t.w / 2) * (1 - row / 12);
+        const l = Math.round(cx - halfW);
+        const r = Math.round(cx + halfW);
+        for (let x = l; x <= r; x++) {
+          const rel = (x - l) / Math.max(1, r - l);
+          ctx.fillStyle = rel < 0.25 ? PAL.leafMid : rel < 0.7 ? PAL.leafBase : PAL.leafDark;
+          if (row === 0) ctx.fillStyle = PAL.leafShadow;
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+    ctx.fillStyle = PAL.leafHi;
+    for (let i = 0; i < 10; i++) {
+      ctx.fillRect(
+        cx - 8 + Math.floor(hashNoise(i, variant, 3) * 16),
+        8 + Math.floor(hashNoise(i, variant, 4) * 36),
+        1,
+        1,
+      );
+    }
+  });
+}

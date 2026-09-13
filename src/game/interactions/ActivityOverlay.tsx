@@ -4,6 +4,7 @@ import { NineSlicePanel } from "../../components/pixel/NineSlicePanel";
 import { PixelButton } from "../../components/pixel/PixelButton";
 import { PixelSprite } from "../../components/pixel/PixelSprite";
 import { numberCard } from "../../engine/sprites/props";
+import { outlineBitmap } from "../../engine/pixelArt";
 import { useTelemetry } from "../telemetry/store";
 import { profileForDomain } from "../adapt/difficulty";
 import { speechEngine } from "../speech/SpeechEngine";
@@ -29,6 +30,12 @@ function shuffled<T>(arr: T[]): T[] {
 
 /** Idle time before the cue ladder offers a little more help on its own. */
 const IDLE_CUE_MS = 9000;
+
+/** Scale a sprite so it fills most of a tile regardless of its native size. */
+function fitScale(render: () => HTMLCanvasElement, box = 62): number {
+  const bmp = render();
+  return Math.max(2, Math.min(7, Math.floor(box / Math.max(bmp.width, bmp.height))));
+}
 
 /** Cue-ladder tile: escalates help (glow -> lift -> label -> pointer) without ever signalling failure. */
 function CueTile({
@@ -72,14 +79,16 @@ function CueTile({
           showLift && !reducedMotion ? "-translate-y-1" : ""
         }`}
         style={{
-          background: done && isTarget ? "linear-gradient(#dff0d8,#bfe0b4)" : "linear-gradient(#fbf1da,#ecdcba)",
+          background: done && isTarget
+            ? "linear-gradient(#dff0d8,#bfe0b4)"
+            : "radial-gradient(circle at 50% 38%, #fff8e6 0%, #f1e1bd 62%, #e2cc9d 100%)",
           border: `4px solid ${done && isTarget ? "#3f7d40" : showGlow ? "#d9a33a" : "#6d4a2f"}`,
           boxShadow: showGlow
             ? "0 0 0 8px rgba(224,168,53,0.75), 0 0 22px 6px rgba(224,168,53,0.5), 0 6px 0 rgba(0,0,0,0.25)"
             : "0 5px 0 rgba(0,0,0,0.25)",
         }}
       >
-        <PixelSprite bitmap={option.render} scale={3} />
+        <PixelSprite bitmap={() => outlineBitmap(option.render())} scale={fitScale(option.render)} />
         {done && isTarget && (
           <span className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#3f7d40] text-base text-white shadow-lg">
             ✓
@@ -113,7 +122,7 @@ function PairsBoard({
   onFlip: (key: string) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 justify-items-center gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-4 justify-items-center gap-2 sm:gap-3">
       {cards.map(({ key, option }) => {
         const isUp = flipped.includes(key) || matched.has(option.id);
         const isMatched = matched.has(option.id);
@@ -123,7 +132,7 @@ function PairsBoard({
             key={key}
             onClick={() => onFlip(key)}
             aria-label={isUp ? option.label : "Face-down card"}
-            className={`flex h-[72px] w-[72px] items-center justify-center rounded-xl transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-400 active:scale-95 sm:h-20 sm:w-20 ${
+            className={`flex h-16 w-16 items-center justify-center rounded-xl transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-400 active:scale-95 sm:h-20 sm:w-20 ${
               hinted && !reducedMotion ? "animate-bob" : ""
             }`}
             style={{
@@ -137,7 +146,7 @@ function PairsBoard({
             }}
           >
             {isUp ? (
-              <PixelSprite bitmap={option.render} scale={3} />
+              <PixelSprite bitmap={() => outlineBitmap(option.render())} scale={fitScale(option.render, 46)} />
             ) : (
               <span className="text-2xl text-[#e6cfa4]" aria-hidden>
                 ?
@@ -378,7 +387,7 @@ export function ActivityOverlay({ activity, locationId, onComplete, onClose }: A
                 style={{ background: "rgba(120,85,45,0.12)", border: "2px solid #c2a878" }}
               >
                 {Array.from({ length: activity.count.answer }).map((_, i) => (
-                  <PixelSprite key={i} bitmap={activity.count!.icon} scale={3} />
+                  <PixelSprite key={i} bitmap={() => outlineBitmap(activity.count!.icon())} scale={fitScale(activity.count!.icon, 40)} />
                 ))}
               </div>
             )}

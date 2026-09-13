@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { TimeMode } from "../../engine/fx/DayNight";
 import type { WeatherKind } from "../../engine/fx/Weather";
 import { useProfile, scopedKey } from "../profiles/ProfileContext";
@@ -65,11 +65,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(() => load(key));
 
   // switching person swaps in that person's own settings
+  const loadedKeyRef = useRef(key);
   useEffect(() => {
     setSettings(load(scopedKey(STORAGE_KEY, activeId)));
+    loadedKeyRef.current = scopedKey(STORAGE_KEY, activeId);
   }, [activeId]);
 
   useEffect(() => {
+    if (loadedKeyRef.current !== key) return;
     try {
       localStorage.setItem(key, JSON.stringify(settings));
     } catch {

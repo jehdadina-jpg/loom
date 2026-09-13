@@ -15,6 +15,8 @@ export interface WorldObject {
   castsShadow?: boolean;
   /** Mirror this object into water below it. */
   reflects?: boolean;
+  /** Shrinks distant objects so a street can recede into the scene. */
+  scale?: number;
 }
 
 export function worldObj(
@@ -28,6 +30,7 @@ export function worldObj(
     pos?: WorldObject["pos"];
     castsShadow?: boolean;
     reflects?: boolean;
+    scale?: number;
   },
 ): WorldObject {
   return {
@@ -40,6 +43,7 @@ export function worldObj(
     pos: opts?.pos,
     castsShadow: opts?.castsShadow ?? true,
     reflects: opts?.reflects,
+    scale: opts?.scale,
   };
 }
 
@@ -57,31 +61,30 @@ export function renderWorldObjects(
 
   for (const { o, x, y } of resolved) {
     const bmp = o.bitmap(time);
+    const sc = o.scale ?? 1;
+    const dw = Math.round(bmp.width * sc);
+    const dh = Math.round(bmp.height * sc);
 
     if (sky && o.castsShadow !== false && o.anchor !== "top-left") {
-      drawCastShadow(ctx, x, y - 1, bmp.width, bmp.height, sky);
+      drawCastShadow(ctx, x, y - 1, dw, dh, sky);
     }
 
     let dx = x;
     let dy = y;
     if (o.anchor === "bottom") {
-      dx = Math.round(x - bmp.width / 2);
-      dy = Math.round(y - bmp.height);
+      dx = Math.round(x - dw / 2);
+      dy = Math.round(y - dh);
     } else if (o.anchor === "center") {
-      dx = Math.round(x - bmp.width / 2);
-      dy = Math.round(y - bmp.height / 2);
+      dx = Math.round(x - dw / 2);
+      dy = Math.round(y - dh / 2);
     } else {
       dx = Math.round(x);
       dy = Math.round(y);
     }
 
-    if (o.alpha !== undefined) {
-      ctx.globalAlpha = o.alpha;
-      ctx.drawImage(bmp, dx, dy);
-      ctx.globalAlpha = 1;
-    } else {
-      ctx.drawImage(bmp, dx, dy);
-    }
+    if (o.alpha !== undefined) ctx.globalAlpha = o.alpha;
+    ctx.drawImage(bmp, dx, dy, dw, dh);
+    ctx.globalAlpha = 1;
   }
 }
 

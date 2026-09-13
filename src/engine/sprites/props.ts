@@ -377,3 +377,138 @@ export function toolSprite(kind: "hoe" | "bucket"): HTMLCanvasElement {
     }
   });
 }
+
+
+export function barrelSprite(): HTMLCanvasElement {
+  return getProceduralBitmap("barrel", { w: 16, h: 20 }, (ctx) => {
+    ctx.fillStyle = "#000";
+    ctx.globalAlpha = 0.22;
+    ctx.beginPath();
+    ctx.ellipse(8, 19, 7, 1.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    for (let y = 1; y < 19; y++) {
+      const bulge = Math.sin((y / 18) * Math.PI) * 1.5;
+      const l = Math.round(2 - bulge);
+      const r = Math.round(13 + bulge);
+      for (let x = l; x <= r; x++) {
+        const rel = (x - l) / (r - l);
+        ctx.fillStyle = rel < 0.2 ? PAL.woodHi : rel < 0.75 ? PAL.woodMid : PAL.woodShadow;
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+    ctx.fillStyle = PAL.woodShadow;
+    for (let x = 4; x < 12; x += 3) ctx.fillRect(x, 1, 1, 18);
+    ctx.fillStyle = PAL.stoneDark;
+    ctx.fillRect(1, 4, 14, 2);
+    ctx.fillRect(1, 13, 14, 2);
+    ctx.fillStyle = PAL.stoneHi;
+    ctx.fillRect(1, 4, 14, 1);
+    ctx.fillRect(1, 13, 14, 1);
+    ctx.fillStyle = PAL.woodDark;
+    ctx.beginPath();
+    ctx.ellipse(8, 1.5, 6, 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+export function hayBaleSprite(): HTMLCanvasElement {
+  return getProceduralBitmap("hay", { w: 22, h: 16 }, (ctx) => {
+    ctx.fillStyle = "#000";
+    ctx.globalAlpha = 0.2;
+    ctx.fillRect(1, 15, 20, 1);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = PAL.cropYellow;
+    ctx.fillRect(1, 2, 20, 13);
+    ctx.fillStyle = "#f2d874";
+    ctx.fillRect(1, 2, 20, 3);
+    ctx.fillRect(1, 2, 3, 13);
+    ctx.fillStyle = PAL.clothMustardSh;
+    ctx.fillRect(18, 2, 3, 13);
+    ctx.fillRect(1, 12, 20, 3);
+    for (let y = 3; y < 14; y += 2) {
+      for (let x = 2 + (y % 4 ? 0 : 2); x < 20; x += 4) ctx.fillRect(x, y, 2, 1);
+    }
+    ctx.fillStyle = PAL.woodShadow;
+    ctx.fillRect(1, 6, 20, 1);
+    ctx.fillRect(1, 10, 20, 1);
+  });
+}
+
+export function ladderSprite(): HTMLCanvasElement {
+  return getProceduralBitmap("ladder", { w: 12, h: 40 }, (ctx) => {
+    ctx.fillStyle = PAL.woodBase;
+    ctx.fillRect(1, 0, 2, 40);
+    ctx.fillRect(9, 0, 2, 40);
+    ctx.fillStyle = PAL.woodHi;
+    ctx.fillRect(1, 0, 1, 40);
+    ctx.fillRect(9, 0, 1, 40);
+    for (let y = 3; y < 40; y += 6) {
+      ctx.fillStyle = PAL.woodMid;
+      ctx.fillRect(3, y, 6, 2);
+      ctx.fillStyle = PAL.woodShadow;
+      ctx.fillRect(3, y + 2, 6, 1);
+    }
+  });
+}
+
+export function lanternPostSprite(): HTMLCanvasElement {
+  return getProceduralBitmap("lanternpost", { w: 14, h: 40 }, (ctx) => {
+    ctx.fillStyle = "#000";
+    ctx.globalAlpha = 0.2;
+    ctx.beginPath();
+    ctx.ellipse(6, 39, 4, 1.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = PAL.woodDark;
+    ctx.fillRect(5, 4, 3, 36);
+    ctx.fillStyle = PAL.woodBase;
+    ctx.fillRect(5, 4, 1, 36);
+    ctx.fillRect(5, 4, 9, 2);
+    ctx.fillStyle = PAL.stoneDark;
+    ctx.fillRect(9, 7, 5, 8);
+    ctx.fillStyle = "#ffd08a";
+    ctx.fillRect(10, 8, 3, 6);
+    ctx.fillStyle = "#ff9d46";
+    ctx.fillRect(11, 10, 1, 3);
+    ctx.fillStyle = PAL.woodShadow;
+    ctx.fillRect(9, 15, 5, 2);
+  });
+}
+
+export function wagonSprite(): HTMLCanvasElement {
+  return getProceduralBitmap("wagon", { w: 34, h: 22 }, (ctx) => {
+    ctx.fillStyle = "#000";
+    ctx.globalAlpha = 0.22;
+    ctx.beginPath();
+    ctx.ellipse(17, 21, 15, 1.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = PAL.woodMid;
+    ctx.fillRect(4, 6, 26, 10);
+    ctx.fillStyle = PAL.woodHi;
+    ctx.fillRect(4, 6, 26, 1);
+    ctx.fillStyle = PAL.woodShadow;
+    for (let x = 8; x < 30; x += 5) ctx.fillRect(x, 6, 1, 10);
+    ctx.fillRect(4, 15, 26, 1);
+    ctx.fillStyle = PAL.woodDark;
+    ctx.fillRect(0, 10, 5, 2);
+    ctx.fillStyle = PAL.cropYellow;
+    ctx.fillRect(7, 2, 20, 5);
+    ctx.fillStyle = PAL.clothMustardSh;
+    ctx.fillRect(7, 6, 20, 1);
+    for (const wx of [9, 25]) {
+      ctx.fillStyle = PAL.woodShadow;
+      ctx.beginPath();
+      ctx.arc(wx, 17, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = PAL.woodBase;
+      ctx.beginPath();
+      ctx.arc(wx, 17, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = PAL.woodShadow;
+      ctx.fillRect(wx - 1, 14, 2, 6);
+      ctx.fillRect(wx - 3, 16, 6, 2);
+    }
+  });
+}

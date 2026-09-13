@@ -216,3 +216,65 @@ export function woodFloorTile(variant: number): HTMLCanvasElement {
     ctx.globalAlpha = 1;
   });
 }
+
+/** Exposed earth face of a terrace step — dirt with embedded stones and roots. */
+export function cliffTile(variant: number): HTMLCanvasElement {
+  return getProceduralBitmap(`cliff-${variant}`, { w: TILE, h: TILE }, (ctx) => {
+    quietFill(ctx, PAL.soilBase, PAL.soilShadow, PAL.soilMid, PAL.soilHi, variant * 53 + 11, 0.3);
+    // horizontal strata
+    ctx.fillStyle = PAL.soilShadow;
+    ctx.globalAlpha = 0.5;
+    for (let y = 3; y < TILE; y += 5) ctx.fillRect(0, y, TILE, 1);
+    ctx.globalAlpha = 1;
+    // embedded stones
+    for (let i = 0; i < 2; i++) {
+      const sx = 1 + Math.floor(hashNoise(i, variant, 71) * 12);
+      const sy = 2 + Math.floor(hashNoise(i, variant, 72) * 11);
+      ctx.fillStyle = PAL.stoneBase;
+      ctx.fillRect(sx, sy, 3, 2);
+      ctx.fillStyle = PAL.stoneHi;
+      ctx.fillRect(sx, sy, 2, 1);
+      ctx.fillStyle = PAL.stoneShadow;
+      ctx.fillRect(sx, sy + 2, 3, 1);
+    }
+  });
+}
+
+/** Grass lip at the top of a cliff — grass tile with tufts hanging over the edge. */
+export function grassLipTile(variant: number): HTMLCanvasElement {
+  return getProceduralBitmap(`grasslip-${variant}`, { w: TILE, h: TILE }, (ctx) => {
+    ctx.drawImage(cliffTile(variant), 0, 0);
+    ctx.fillStyle = PAL.grassBase;
+    ctx.fillRect(0, 0, TILE, 6);
+    ctx.fillStyle = PAL.grassHi;
+    ctx.fillRect(0, 0, TILE, 1);
+    ctx.fillStyle = PAL.grassDark;
+    for (let x = 0; x < TILE; x += 2) {
+      const drop = 6 + Math.floor(hashNoise(x, variant, 91) * 4);
+      ctx.fillRect(x, 5, 1, drop - 4);
+    }
+    ctx.fillStyle = PAL.grassShadow;
+    ctx.fillRect(0, 5, TILE, 1);
+  });
+}
+
+
+/** Rounded cobblestones for a village street. */
+export function cobbleTile(variant: number): HTMLCanvasElement {
+  return getProceduralBitmap(`cobble-${variant}`, { w: TILE, h: TILE }, (ctx) => {
+    ctx.fillStyle = PAL.stoneShadow;
+    ctx.fillRect(0, 0, TILE, TILE);
+    for (let row = 0; row < 4; row++) {
+      const offset = row % 2 ? 2 : 0;
+      for (let col = -1; col < 4; col++) {
+        const x = col * 5 + offset + 1;
+        const y = row * 4 + 1;
+        const n = hashNoise(x + variant * 3, y, 17);
+        ctx.fillStyle = n < 0.3 ? PAL.stoneDark : n < 0.7 ? PAL.stoneBase : PAL.stoneMid;
+        ctx.fillRect(x, y, 4, 3);
+        ctx.fillStyle = PAL.stoneHi;
+        ctx.fillRect(x, y, 3, 1);
+      }
+    }
+  });
+}

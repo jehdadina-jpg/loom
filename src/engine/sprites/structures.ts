@@ -37,120 +37,270 @@ export interface HouseOptions {
   accent?: string;
 }
 
-/** A full wooden village house: stilts, plank walls, window, door, gable thatch roof, porch beam. */
+function poly(ctx: CanvasRenderingContext2D, pts: [number, number][], fill: string) {
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+  ctx.closePath();
+  ctx.fill();
+}
+
+/**
+ * A village house in three-quarter view: a lit front wall, a receding side wall in
+ * shadow, a gable roof whose top plane catches the light, deep eaves, chimney, shuttered
+ * window with a flower box, painted door with stone steps and cloth under the eave.
+ */
 export function houseSprite(opts: HouseOptions): HTMLCanvasElement {
-  const w = opts.width ?? 72;
-  const h = 66;
-  const key = `house-${opts.variant}-${w}-${opts.roofColor}-${opts.withStilts}-${opts.accent ?? "n"}`;
-  return getProceduralBitmap(key, { w, h }, (ctx) => {
-    const stiltH = opts.withStilts === false ? 0 : 10;
-    const wallTop = 24;
+  const w = opts.width ?? 96;
+  const d = Math.round(w * 0.3); // depth of the side wall
+  const fw = w - d; // front wall width
+  const h = 104;
+  const rise = Math.round(d * 0.45); // how far the side recedes upward
+  const key = `house3q-${opts.variant}-${w}-${opts.roofColor}-${opts.withStilts}-${opts.accent ?? "n"}`;
+  return getProceduralBitmap(key, { w: w + 10, h }, (ctx) => {
+    const accent = opts.accent ?? PAL.clothTeal;
+    const stiltH = opts.withStilts === false ? 0 : 12;
+    const wallTop = 44;
     const wallBottom = h - 6 - stiltH;
     const wallH = wallBottom - wallTop;
+    const isThatch = (opts.roofColor ?? "thatch") === "thatch";
+    const roofDark = isThatch ? PAL.thatchShadow : PAL.roofSlateShadow;
+    const roofBase = isThatch ? PAL.thatchBase : PAL.roofSlateBase;
+    const roofMid = isThatch ? PAL.thatchMid : PAL.roofSlateMid;
+    const roofHi = isThatch ? PAL.thatchHi : PAL.roofSlateDark;
+    const peakY = 8;
+    const ov = 8; // eave overhang
 
-    // ground shadow
+    // ground shadow, offset toward the receding side
     ctx.fillStyle = "#000000";
-    ctx.globalAlpha = 0.22;
+    ctx.globalAlpha = 0.26;
     ctx.beginPath();
-    ctx.ellipse(w / 2, h - 3, w * 0.42, 3, 0, 0, Math.PI * 2);
+    ctx.ellipse(w / 2 + 4, h - 3, w * 0.5, 4, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    // stilts
+    // stilts: front row and the receding side row
     if (stiltH > 0) {
-      const stiltXs = [8, w - 12, w / 2 - 3];
-      for (const sx of stiltXs) {
-        shadedRect(ctx, sx, h - stiltH - 6, 5, stiltH + 6, PAL.woodDark, PAL.woodShadow, PAL.woodBase);
+      const posts: [number, number][] = [
+        [6, wallBottom],
+        [fw / 2 - 3, wallBottom],
+        [fw - 8, wallBottom],
+        [w - 6, wallBottom - rise],
+        [fw + d / 2 - 2, wallBottom - rise / 2],
+      ];
+      for (const [sx, sy] of posts) {
+        shadedRect(ctx, sx, sy, 5, stiltH + 2, PAL.woodDark, PAL.woodShadow, PAL.woodBase);
+        ctx.fillStyle = PAL.stoneBase;
+        ctx.fillRect(sx - 1, sy + stiltH, 7, 2);
       }
     }
 
-    // walls
-    shadedRect(ctx, 2, wallTop, w - 4, wallH, PAL.woodBase, PAL.woodShadow, PAL.woodHi);
-    plankTexture(ctx, 2, wallTop, w - 4, wallH, opts.variant);
-    // base trim
-    ctx.fillStyle = PAL.woodDark;
-    ctx.fillRect(2, wallBottom - 3, w - 4, 3);
+    // ---- side wall (in shadow), receding up and to the right
+    poly(
+      ctx,
+      [
+        [fw, wallTop],
+        [w, wallTop - rise],
+        [w, wallBottom - rise],
+        [fw, wallBottom],
+      ],
+      PAL.woodDark,
+    );
+    // diagonal plank lines following the recession
+    ctx.fillStyle = PAL.woodShadow;
+    ctx.globalAlpha = 0.6;
+    for (let i = 1; i < 7; i++) {
+      const t = i / 7;
+      const y0 = wallTop + wallH * t;
+      const y1 = wallTop - rise + wallH * t;
+      ctx.beginPath();
+      ctx.moveTo(fw, y0);
+      ctx.lineTo(w, y1);
+      ctx.lineTo(w, y1 + 1);
+      ctx.lineTo(fw, y0 + 1);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // small side window
+    poly(
+      ctx,
+      [
+        [fw + d * 0.35, wallTop + 10 - rise * 0.35],
+        [fw + d * 0.65, wallTop + 10 - rise * 0.65],
+        [fw + d * 0.65, wallTop + 20 - rise * 0.65],
+        [fw + d * 0.35, wallTop + 20 - rise * 0.35],
+      ],
+      "#ffd88f",
+    );
 
-    // window
-    const winW = 12,
-      winH = 10;
-    const winX = w * 0.2;
-    const winY = wallTop + 5;
+    // ---- front wall (lit)
+    shadedRect(ctx, 0, wallTop, fw, wallH, PAL.woodBase, PAL.woodShadow, PAL.woodHi);
+    plankTexture(ctx, 0, wallTop, fw, wallH, opts.variant);
+    ctx.fillStyle = PAL.woodShadow;
+    ctx.globalAlpha = 0.3;
+    for (let y = wallTop + 6; y < wallBottom; y += 7) ctx.fillRect(0, y, fw, 1);
+    ctx.globalAlpha = 1;
+    shadedRect(ctx, 0, wallTop - 2, 4, wallH + 2, PAL.woodDark, PAL.woodShadow, PAL.woodBase);
+    shadedRect(ctx, fw - 3, wallTop - 2, 4, wallH + 2, PAL.woodShadow, PAL.woodShadow, PAL.woodDark);
+    ctx.fillStyle = PAL.woodDark;
+    ctx.fillRect(0, wallBottom - 3, fw, 3);
+
+    // window with shutters + flower box
+    const winW = 14;
+    const winH = 12;
+    const winX = Math.round(fw * 0.16);
+    const winY = wallTop + 9;
     ctx.fillStyle = PAL.frameCream;
     ctx.fillRect(winX - 2, winY - 2, winW + 4, winH + 4);
     ctx.fillStyle = PAL.woodShadow;
     ctx.fillRect(winX - 1, winY - 1, winW + 2, winH + 2);
     ctx.fillStyle = PAL.skyMid;
     ctx.fillRect(winX, winY, winW, winH);
+    ctx.fillStyle = "#ffe9b8";
+    ctx.fillRect(winX + 1, winY + 1, 5, 4);
     ctx.fillStyle = PAL.woodDark;
     ctx.fillRect(winX + winW / 2 - 0.5, winY, 1, winH);
     ctx.fillRect(winX, winY + winH / 2 - 0.5, winW, 1);
-    // shutters
-    ctx.fillStyle = opts.accent ?? PAL.clothTeal;
-    ctx.fillRect(winX - 4, winY, 3, winH);
-    ctx.fillRect(winX + winW + 1, winY, 3, winH);
+    ctx.fillStyle = accent;
+    ctx.fillRect(winX - 6, winY - 1, 4, winH + 2);
+    ctx.fillRect(winX + winW + 2, winY - 1, 4, winH + 2);
+    ctx.fillStyle = PAL.woodMid;
+    ctx.fillRect(winX - 3, winY + winH + 2, winW + 6, 4);
+    ctx.fillStyle = PAL.woodShadow;
+    ctx.fillRect(winX - 3, winY + winH + 5, winW + 6, 1);
+    for (let i = 0; i < 5; i++) {
+      ctx.fillStyle = [PAL.fruitRed, PAL.clothMustard, PAL.fruitOrange][i % 3];
+      ctx.fillRect(winX - 1 + i * 4, winY + winH, 2, 2);
+      ctx.fillStyle = PAL.leafBase;
+      ctx.fillRect(winX + i * 4, winY + winH + 2, 1, 1);
+    }
 
-    // door — a distinctly painted panel (not wood-on-wood) so it pops against the wall
-    const doorW = 14,
-      doorH = wallH - 8;
-    const doorX = w * 0.62;
+    // door + steps
+    const doorW = 18;
+    const doorH = wallH - 10;
+    const doorX = Math.round(fw * 0.58);
     const doorY = wallBottom - doorH;
     ctx.fillStyle = PAL.frameCream;
-    ctx.fillRect(doorX - 2, doorY - 2, doorW + 4, doorH + 2);
+    ctx.fillRect(doorX - 3, doorY - 3, doorW + 6, doorH + 3);
     ctx.fillStyle = PAL.doorShadow;
     ctx.fillRect(doorX - 1, doorY - 1, doorW + 2, doorH + 1);
     shadedRect(ctx, doorX, doorY, doorW, doorH, PAL.doorMid, PAL.doorShadow, PAL.doorHi);
     ctx.fillStyle = PAL.doorShadow;
     ctx.globalAlpha = 0.7;
-    for (let px = doorX + 3; px < doorX + doorW; px += 4) ctx.fillRect(px, doorY, 1, doorH);
+    for (let px = doorX + 4; px < doorX + doorW; px += 5) ctx.fillRect(px, doorY, 1, doorH);
+    ctx.fillRect(doorX, doorY + Math.round(doorH * 0.45), doorW, 1);
     ctx.globalAlpha = 1;
     ctx.fillStyle = PAL.clothMustard;
-    ctx.fillRect(doorX + doorW - 4, doorY + doorH / 2, 2, 2);
+    ctx.fillRect(doorX + doorW - 5, doorY + doorH / 2, 2, 3);
+    for (let i = 0; i < 3; i++) {
+      shadedRect(ctx, doorX - 4 + i * 2, wallBottom + i * 3, doorW + 8 - i * 4, 3, PAL.stoneBase, PAL.stoneShadow, PAL.stoneHi);
+    }
 
-    // porch beam
+    // cloth under the eave
+    for (let x = 6; x < fw - 6; x += 9) {
+      ctx.fillStyle = (x / 9) % 2 === 0 ? accent : PAL.clothCream;
+      ctx.fillRect(x, wallTop - 1, 7, 5);
+    }
     ctx.fillStyle = PAL.woodDark;
-    ctx.fillRect(0, wallTop - 3, w, 3);
+    ctx.fillRect(0, wallTop - 4, fw, 3);
 
-    // roof (gable)
-    const roofBaseY = wallTop - 2;
-    const roofPeakY = 2;
-    const overhang = 8;
-    const isThatch = (opts.roofColor ?? "thatch") === "thatch";
-    const roofDark = isThatch ? PAL.thatchShadow : PAL.roofSlateShadow;
-    const roofBase = isThatch ? PAL.thatchBase : PAL.roofSlateBase;
-    const roofMid = isThatch ? PAL.thatchMid : PAL.roofSlateMid;
-    const roofHi = isThatch ? PAL.thatchHi : PAL.roofSlateDark;
+    // ---- roof: the side plane (top face, catches light) then the front gable
+    const ridgeX = fw / 2;
+    const eaveY = wallTop - 3;
+    // side plane: from the ridge back to the far corner
+    poly(
+      ctx,
+      [
+        [ridgeX, peakY],
+        [ridgeX + d, peakY - rise],
+        [w + ov, eaveY - rise],
+        [fw + ov, eaveY],
+      ],
+      roofMid,
+    );
+    // thatch rows across the side plane
+    ctx.fillStyle = roofDark;
+    ctx.globalAlpha = 0.55;
+    for (let i = 1; i < 6; i++) {
+      const t = i / 6;
+      const ax = ridgeX + (fw + ov - ridgeX) * t;
+      const ay = peakY + (eaveY - peakY) * t;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax + d, ay - rise);
+      ctx.lineTo(ax + d, ay - rise + 1);
+      ctx.lineTo(ax, ay + 1);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = roofHi;
+    ctx.globalAlpha = 0.5;
+    poly(
+      ctx,
+      [
+        [ridgeX, peakY],
+        [ridgeX + d, peakY - rise],
+        [ridgeX + d + 3, peakY - rise + 3],
+        [ridgeX + 3, peakY + 3],
+      ],
+      roofHi,
+    );
+    ctx.globalAlpha = 1;
 
-    for (let y = roofPeakY; y <= roofBaseY; y++) {
-      const t = (y - roofPeakY) / (roofBaseY - roofPeakY);
-      const halfW = t * (w / 2 + overhang);
-      const left = Math.round(w / 2 - halfW);
-      const right = Math.round(w / 2 + halfW);
+    // front gable slope, layered thatch
+    for (let y = peakY; y <= eaveY; y++) {
+      const t = (y - peakY) / (eaveY - peakY);
+      const halfW = t * (fw / 2 + ov);
+      const left = Math.round(ridgeX - halfW);
+      const right = Math.round(ridgeX + halfW);
+      const layer = Math.floor((y - peakY) / 6);
       for (let x = left; x <= right; x++) {
         const rel = (x - left) / Math.max(1, right - left);
         let c: string;
-        if (rel < 0.12) c = roofHi;
-        else if (rel < 0.55) c = roofBase;
-        else if (rel < 0.85) c = roofMid;
+        if (rel < 0.08) c = roofHi;
+        else if (rel < 0.5) c = layer % 2 === 0 ? roofBase : roofMid;
+        else if (rel < 0.9) c = layer % 2 === 0 ? roofMid : roofBase;
         else c = roofDark;
-        // horizontal thatch/slate banding texture
-        if (isThatch && (y - roofPeakY) % 3 === 0) c = roofDark;
+        if ((y - peakY) % 6 === 5) c = roofDark;
         ctx.fillStyle = c;
         ctx.fillRect(x, y, 1, 1);
       }
     }
-    // roof ridge highlight
-    ctx.fillStyle = roofHi;
-    ctx.fillRect(w / 2 - 1, roofPeakY, 2, roofBaseY - roofPeakY);
-    // roof texture flecks
-    for (let i = 0; i < 14; i++) {
-      const fx = Math.floor(hashNoise(i, opts.variant, 3) * w);
-      const fy = roofPeakY + Math.floor(hashNoise(i, opts.variant, 4) * (roofBaseY - roofPeakY));
+    // eave fringe + ridge cap
+    ctx.fillStyle = roofDark;
+    for (let x = Math.round(ridgeX - fw / 2 - ov); x < fw + ov; x += 3) {
+      ctx.fillRect(Math.max(0, x), eaveY + 1, 2, 2 + (x % 2 ? 1 : 0));
+    }
+    ctx.fillStyle = PAL.woodDark;
+    ctx.fillRect(ridgeX - 2, peakY - 1, 5, 3);
+    for (let i = 0; i < 22; i++) {
+      const fx = Math.floor(hashNoise(i, opts.variant, 3) * fw);
+      const fy = peakY + Math.floor(hashNoise(i, opts.variant, 4) * (eaveY - peakY));
       ctx.fillStyle = roofDark;
       ctx.globalAlpha = 0.5;
-      ctx.fillRect(fx, fy, 1, 1);
+      ctx.fillRect(fx, fy, 2, 1);
       ctx.globalAlpha = 1;
     }
+
+    // chimney on the side plane
+    const chX = Math.round(ridgeX + d * 0.55);
+    const chY = Math.round(peakY - rise * 0.55) - 12;
+    ctx.fillStyle = PAL.stoneDark;
+    ctx.fillRect(chX, chY, 8, 18);
+    ctx.fillStyle = PAL.stoneBase;
+    ctx.fillRect(chX + 1, chY + 1, 3, 17);
+    ctx.fillStyle = PAL.stoneShadow;
+    ctx.fillRect(chX, chY, 8, 2);
+    ctx.fillStyle = PAL.stoneHi;
+    ctx.fillRect(chX + 1, chY + 1, 6, 1);
+
+    // eave shadow on the front wall gives the overhang depth
+    ctx.fillStyle = "#000";
+    ctx.globalAlpha = 0.2;
+    ctx.fillRect(0, wallTop - 1, fw, 4);
+    ctx.globalAlpha = 1;
   });
 }
 
@@ -216,60 +366,67 @@ export function fenceSegmentSprite(variant: number): HTMLCanvasElement {
   });
 }
 
-export function marketStallSprite(variant: number, accent: string): HTMLCanvasElement {
-  return getProceduralBitmap(`stall-${variant}-${accent}`, { w: 48, h: 44 }, (ctx) => {
+export function marketStallSprite(variant: number, accent: string, frame: 0 | 1 = 0): HTMLCanvasElement {
+  return getProceduralBitmap(`stall-${variant}-${accent}-${frame}`, { w: 58, h: 46 }, (ctx) => {
     ctx.fillStyle = "#000000";
-    ctx.globalAlpha = 0.2;
+    ctx.globalAlpha = 0.22;
     ctx.beginPath();
-    ctx.ellipse(24, 42, 20, 2.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(27, 44, 24, 2.6, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    // posts
-    shadedRect(ctx, 3, 10, 4, 30, PAL.woodDark, PAL.woodShadow, PAL.woodBase);
-    shadedRect(ctx, 41, 10, 4, 30, PAL.woodDark, PAL.woodShadow, PAL.woodBase);
+    // receding side of the counter and awning
+    poly(ctx, [[46, 28], [56, 24], [56, 36], [46, 40]], PAL.woodDark);
+    poly(ctx, [[46, 4], [56, 1], [56, 11], [46, 14]], PAL.woodShadow);
 
-    // canopy (striped cloth awning)
+    // posts
+    shadedRect(ctx, 3, 12, 4, 30, PAL.woodDark, PAL.woodShadow, PAL.woodBase);
+    shadedRect(ctx, 42, 12, 4, 30, PAL.woodDark, PAL.woodShadow, PAL.woodBase);
+    shadedRect(ctx, 52, 8, 3, 26, PAL.woodShadow, PAL.woodShadow, PAL.woodDark);
+
+    // striped awning with a fluttering scalloped edge
     const canopyY = 4;
     for (let x = 0; x < 48; x++) {
       const stripe = Math.floor(x / 6) % 2 === 0;
       ctx.fillStyle = stripe ? accent : PAL.clothCream;
       const droop = Math.round(Math.sin((x / 48) * Math.PI) * 2);
       ctx.fillRect(x, canopyY + droop, 1, 8);
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      if (x % 6 === 5) ctx.fillRect(x, canopyY + droop, 1, 8);
     }
     ctx.fillStyle = PAL.woodShadow;
     ctx.fillRect(0, canopyY + 8, 48, 1);
-    // scalloped edge
     for (let x = 0; x < 48; x += 4) {
       ctx.fillStyle = Math.floor(x / 6) % 2 === 0 ? accent : PAL.clothCream;
-      const droop = Math.round(Math.sin((x / 48) * Math.PI) * 2);
+      const droop = Math.round(Math.sin((x / 48) * Math.PI) * 2) + (frame === 1 && (x / 4) % 2 === 0 ? 1 : 0);
       ctx.fillRect(x, canopyY + 8 + droop, 3, 2);
     }
 
-    // counter table
-    shadedRect(ctx, 4, 26, 40, 12, PAL.woodMid, PAL.woodShadow, PAL.woodPale);
-    plankTexture(ctx, 4, 26, 40, 12, variant);
-    ctx.fillStyle = PAL.woodShadow;
-    ctx.fillRect(4, 26, 40, 1);
+    // counter with front and top face
+    shadedRect(ctx, 4, 28, 42, 12, PAL.woodMid, PAL.woodShadow, PAL.woodPale);
+    plankTexture(ctx, 4, 28, 42, 12, variant);
+    ctx.fillStyle = PAL.woodHi;
+    ctx.fillRect(4, 27, 42, 2);
 
-    // goods on the counter — baskets of produce, alternating colors
+    // goods
     const goods = [PAL.fruitRed, PAL.fruitOrange, PAL.cropYellow, PAL.leafBase, PAL.clothMaroon];
     for (let i = 0; i < 5; i++) {
       const gx = 7 + i * 7;
-      const gColor = goods[i % goods.length];
       ctx.fillStyle = PAL.basketBase;
-      ctx.fillRect(gx, 20, 6, 5);
+      ctx.fillRect(gx, 22, 6, 5);
       ctx.fillStyle = PAL.basketDark;
-      ctx.fillRect(gx, 24, 6, 1);
-      // produce mound
-      ctx.fillStyle = gColor;
-      ctx.fillRect(gx + 1, 16, 4, 4);
-      ctx.fillRect(gx, 18, 6, 2);
-      ctx.fillStyle = PAL.white;
-      ctx.globalAlpha = 0.3;
-      ctx.fillRect(gx + 1, 16, 1, 1);
-      ctx.globalAlpha = 1;
+      ctx.fillRect(gx, 26, 6, 1);
+      ctx.fillStyle = goods[i % goods.length];
+      ctx.fillRect(gx + 1, 18, 4, 4);
+      ctx.fillRect(gx, 20, 6, 2);
+      ctx.fillStyle = "rgba(255,255,255,0.35)";
+      ctx.fillRect(gx + 1, 18, 1, 1);
     }
+    // hanging lantern under the awning
+    ctx.fillStyle = PAL.stoneDark;
+    ctx.fillRect(38, 13, 4, 6);
+    ctx.fillStyle = "#ffd08a";
+    ctx.fillRect(39, 14, 2, 4);
   });
 }
 

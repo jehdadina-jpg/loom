@@ -1,6 +1,15 @@
 import { idleFrame, walkRoute, worldObj, type Waypoint, type WorldObject } from "../../engine/world";
 import { outlined } from "../../engine/pixelArt";
-import { treeSprite, bushSprite, rockSprite, flowerClumpSprite, tallGrassTuftSprite, reedSprite } from "../../engine/sprites/nature";
+import {
+  treeSprite,
+  bushSprite,
+  rockSprite,
+  flowerClumpSprite,
+  tallGrassTuftSprite,
+  reedSprite,
+  bigTreeSprite,
+  pineSprite,
+} from "../../engine/sprites/nature";
 import {
   houseSprite,
   fenceSegmentSprite,
@@ -21,6 +30,11 @@ import {
   stoolSprite,
   toolSprite,
   kettleSprite,
+  barrelSprite,
+  hayBaleSprite,
+  ladderSprite,
+  lanternPostSprite,
+  wagonSprite,
 } from "../../engine/sprites/props";
 import { villagerSprite, VILLAGER_PALETTES, type BodyShape, type HairStyle } from "../../engine/sprites/characters";
 import { chickenSprite, dogSprite, goatSprite } from "../../engine/sprites/animals";
@@ -72,12 +86,38 @@ export function waterRegion(grid: TileGrid, x0: number, y0: number, x1: number, 
   });
 }
 
+/** Marks an object as distant so it draws smaller — used to make a street recede. */
+export function far(obj: WorldObject, scale = 0.72): WorldObject {
+  return { ...obj, scale };
+}
+
 // ---- entity factories ---------------------------------------------------
 // Every entity goes through `outlined()` so it carries a dark rim and reads
 // clearly against the terrain no matter what it's standing on.
 
 export function treeObj(x: number, y: number, variant: number, kind: "round" | "tall" = "round"): WorldObject {
   return worldObj(x, y, outlined(() => treeSprite(variant, kind)));
+}
+export function bigTreeObj(x: number, y: number, variant: number): WorldObject {
+  return worldObj(x, y, outlined(() => bigTreeSprite(variant)));
+}
+export function pineObj(x: number, y: number, variant: number): WorldObject {
+  return worldObj(x, y, outlined(() => pineSprite(variant)));
+}
+export function barrelObj(x: number, y: number): WorldObject {
+  return worldObj(x, y, outlined(() => barrelSprite()));
+}
+export function hayObj(x: number, y: number): WorldObject {
+  return worldObj(x, y, outlined(() => hayBaleSprite()));
+}
+export function ladderObj(x: number, y: number): WorldObject {
+  return worldObj(x, y, outlined(() => ladderSprite()));
+}
+export function lanternPostObj(x: number, y: number): WorldObject {
+  return worldObj(x, y, outlined(() => lanternPostSprite()));
+}
+export function wagonObj(x: number, y: number): WorldObject {
+  return worldObj(x, y, outlined(() => wagonSprite()));
 }
 export function bushObj(x: number, y: number, variant: number): WorldObject {
   return worldObj(x, y, outlined(() => bushSprite(variant)));
@@ -101,7 +141,7 @@ export function fenceObj(x: number, y: number, variant: number): WorldObject {
   return worldObj(x, y, outlined(() => fenceSegmentSprite(variant)));
 }
 export function stallObj(x: number, y: number, variant: number, accent: string): WorldObject {
-  return worldObj(x, y, outlined(() => marketStallSprite(variant, accent)));
+  return worldObj(x, y, outlined((t) => marketStallSprite(variant, accent, idleFrame(t, 700, variant))));
 }
 export function verandaRailObj(x: number, y: number, variant: number): WorldObject {
   return worldObj(x, y, outlined(() => verandaRailSprite(variant)));

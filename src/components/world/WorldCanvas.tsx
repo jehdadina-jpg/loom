@@ -6,8 +6,12 @@ import {
   cloudLayer,
   farRidgeLayer,
   midRidgeLayer,
+  stoneTowerLayer,
   forestLayer,
   terraceLayer,
+  foregroundFoliageLayer,
+  drawWaterfall,
+  drawBirdFlock,
   LAYER_OVERSCAN,
 } from "../../engine/sprites/backdrop";
 import { drawTileGrid, tileBitmapFor, TILE } from "../../engine/tilemap";
@@ -91,10 +95,12 @@ export function WorldCanvas({
       clouds: cloudLayer(scene.id, layerW, Math.max(40, skyH * 0.5)),
       far: farRidgeLayer(scene.id, layerW, skyH),
       mid: midRidgeLayer(scene.id, layerW, skyH),
+      tower: scene.stoneTower ? stoneTowerLayer(scene.id, layerW, skyH) : null,
       forest: forestLayer(scene.id, layerW, skyH),
       terrace: terraceLayer(scene.id, layerW, skyH, scene.terraces),
+      foliage: foregroundFoliageLayer(scene.id, layerW, 44),
     }),
-    [scene.id, scene.terraces, layerW, skyH],
+    [scene.id, scene.terraces, scene.stoneTower, layerW, skyH],
   );
 
   function handleFrame(ctx: CanvasRenderingContext2D, time: number) {
@@ -114,8 +120,17 @@ export function WorldCanvas({
     drawGodRays(ctx, sky, STAGE_W, skyH, weather === "clear" ? 1 : 0.4);
 
     ctx.drawImage(layers.clouds, par(0.25), 6 + Math.sin(time / 12000) * 2);
+    if (!sky.isNight) drawBirdFlock(ctx, STAGE_W, skyH, time);
     ctx.drawImage(layers.far, par(0.4), 0);
+    if (layers.tower) {
+      ctx.drawImage(layers.tower, par(0.55), 0);
+      drawWaterfall(ctx, Math.round(STAGE_W * 0.78 + par(0.55) + (layerW - STAGE_W) / 2), skyH * 0.18, skyH * 0.92, t);
+    }
     ctx.drawImage(layers.mid, par(0.7), 0);
+    // a thread of water off the middle ridge
+    if (!layers.tower) {
+      drawWaterfall(ctx, Math.round(STAGE_W * 0.62 + par(0.7) + (layerW - STAGE_W) / 2), skyH * 0.5, skyH * 0.86, t);
+    }
     ctx.drawImage(layers.forest, par(1.0), 0);
     ctx.drawImage(layers.terrace, par(1.4), 0);
 
@@ -192,6 +207,11 @@ export function WorldCanvas({
       particlesRef.current.draw(ctx, STAGE_W, STAGE_H);
     }
 
+    // foreground foliage frames the shot and moves the most with the pointer
+    if (!chromeless) {
+      ctx.drawImage(layers.foliage, par(2.2), STAGE_H - 44 + Math.round(Math.sin(time / 2600) * 1.5));
+    }
+
     // vignette focuses attention on the centre of the scene
     const vig = ctx.createRadialGradient(
       STAGE_W / 2,
@@ -230,12 +250,30 @@ export function WorldCanvas({
     onMiss?.();
   }
 
-  // Stagger neighbouring plaques down a few rows so labels never collide. Busier
-  // places need three rows; a quiet one can sit on a single line.
+  // Pack plaques onto rows so no two labels ever overlap: sorted left to right, each
+  // plaque takes the first row where it clears the previous plaque on that row.
   const rowOf = new Map<string, number>();
-  const rowCount = scene.hotspots.length >= 6 ? 3 : scene.hotspots.length >= 4 ? 2 : 1;
-  if (rowCount > 1) {
-    [...scene.hotspots].sort((a, b) => a.x - b.x).forEach((h, i) => rowOf.set(h.id, i % rowCount));
+  {
+    const font = Math.round((10 + layout.scale * 2) * textScale);
+    const iconW = (layout.scale >= 3 ? 2 : 1) * 16;
+    const rowEnds: number[] = [];
+    const gap = 10;
+    [...scene.hotspots]
+      .sort((a, b) => a.x + a.w / 2 - (b.x + b.w / 2))
+      .forEach((h) => {
+        const estW = h.label.length * font * 0.6 + iconW + font * 1.3 + 18;
+        const cx = (h.x + h.w / 2) * layout.scale;
+        const left = cx - estW / 2;
+        const right = cx + estW / 2;
+        let row = rowEnds.findIndex((end) => end + gap <= left);
+        if (row === -1) {
+          row = rowEnds.length;
+          rowEnds.push(right);
+        } else {
+          rowEnds[row] = right;
+        }
+        rowOf.set(h.id, row);
+      });
   }
 
   const overlay = chromeless ? null : (

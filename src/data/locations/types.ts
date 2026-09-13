@@ -64,6 +64,8 @@ export interface LocationScene {
   subtitle: string;
   horizonRatio: number;
   terraces: boolean;
+  /** A tall mossy stone tower with a waterfall sits far back in this scene. */
+  stoneTower?: boolean;
   groundKind: TileKind;
   tileGrid: TileGrid;
   objects: (time: number) => WorldObject[];

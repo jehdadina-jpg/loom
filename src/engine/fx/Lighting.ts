@@ -8,6 +8,8 @@ export interface LightSource {
   /** Lantern and hearth lights only come on as the day fades. */
   nightOnly?: boolean;
   flicker?: boolean;
+  /** Dappled sunlight under a tree — shows by day instead of night. */
+  dayOnly?: boolean;
 }
 
 /**
@@ -21,11 +23,25 @@ export function drawLights(
   time: number,
 ) {
   const nightFactor = Math.max(sky.starAlpha, sky.lampsOn ? 0.45 : 0);
-  if (nightFactor <= 0.02) return;
+  const dayFactor = sky.isNight ? 0 : Math.max(0, 1 - nightFactor * 1.6);
 
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   for (const l of lights) {
+    if (l.dayOnly) {
+      if (dayFactor <= 0.02) continue;
+      // slowly drifting sun dapple through leaves
+      const sway = Math.sin(time / 1700 + l.x) * 3;
+      const grad = ctx.createRadialGradient(l.x + sway, l.y, 0, l.x + sway, l.y, l.radius);
+      grad.addColorStop(0, hexWithAlpha(l.color, 0.22 * dayFactor));
+      grad.addColorStop(1, hexWithAlpha(l.color, 0));
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(l.x + sway, l.y, l.radius, l.radius * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
+      continue;
+    }
+    if (nightFactor <= 0.02) continue;
     if (l.nightOnly && !sky.lampsOn) continue;
     const flick = l.flicker ? 0.86 + 0.14 * Math.sin(time / 90 + l.x) * Math.sin(time / 37 + l.y) : 1;
     const alpha = nightFactor * 0.85 * flick;

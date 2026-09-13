@@ -11,6 +11,9 @@ import {
   waterEdgeTile,
   waterTile,
   woodFloorTile,
+  cliffTile,
+  grassLipTile,
+  cobbleTile,
 } from "./sprites/terrain";
 
 export type TileKind =
@@ -30,7 +33,10 @@ export type TileKind =
   | "soil"
   | "soilWet"
   | "stonefloor"
-  | "woodfloor";
+  | "woodfloor"
+  | "cliff"
+  | "grasslip"
+  | "cobble";
 
 export type TileGrid = TileKind[][];
 
@@ -75,6 +81,12 @@ export function tileBitmapFor(kind: TileKind, gx: number, gy: number, time: numb
       return stoneFloorTile(variantAt(gx, gy, 4));
     case "woodfloor":
       return woodFloorTile(variantAt(gx, gy, 4));
+    case "cliff":
+      return cliffTile(variantAt(gx, gy, 5));
+    case "grasslip":
+      return grassLipTile(variantAt(gx, gy, 4));
+    case "cobble":
+      return cobbleTile(variantAt(gx, gy, 6));
   }
 }
 
