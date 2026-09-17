@@ -1,22 +1,472 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#3b6742" />
-    <meta name="description" content="LOOM — a calm pixel-art village for cognitive stimulation, built for elderly people living with dementia." />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <title>LOOM — Its World</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Market Street — NPC Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100vw; height: 100vh; margin: 0; padding: 0; overflow: hidden; }
+    body { background: #152832; color: #fff6dc; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    #game { width: 100vw; height: 100vh; }
+    #game canvas { display: block; width: 100vw; height: 100vh; }
+    #interaction-prompt {
+      position: fixed; z-index: 3; transform: translate(-50%, -100%);
+      padding: 9px 12px; border: 2px solid #ffe49a; border-radius: 4px;
+      background: rgba(37, 51, 49, .94); color: #fff7d5;
+      box-shadow: 3px 3px 0 rgba(30, 18, 13, .5); font-size: 13px;
+      pointer-events: none; opacity: 0; transition: opacity 140ms ease;
+    }
+    #interaction-prompt.visible { opacity: 1; }
+    #stall-overlay { position: fixed; inset: 0; z-index: 5; display: none; pointer-events: none; }
+    #stall-overlay.active { display: block; }
+    .paper-list { position: absolute; right: 24px; top: 92px; width: 245px; padding: 23px 20px 19px; color: #432c1d; background: #fff2cf; clip-path: polygon(2% 1%, 98% 0, 100% 8%, 98% 97%, 88% 100%, 76% 98%, 64% 100%, 49% 98%, 34% 100%, 17% 98%, 2% 100%, 0 89%, 2% 72%, 0 58%, 2% 41%, 0 22%); box-shadow: 4px 6px 0 rgba(42,25,18,.28); transform: rotate(1deg); pointer-events: auto; }
+    .paper-list h2 { margin: 0 0 16px; font: 700 21px/1.1 Georgia, serif; }
+    .paper-row { display: flex; gap: 10px; align-items: center; margin: 11px 0; font: 16px/1.2 Georgia, serif; }
+    .paper-row { cursor: pointer; }
+    .paper-row.pending { opacity: .55; }
+    .paper-row.empty { opacity: .32; text-decoration: line-through; }
+    .paper-row.over .paper-label { color: #b4332f; font-weight: bold; text-decoration: line-through; }
+    .paper-warning { color: #b4332f; font: bold 17px/1 Arial; }
+    .paper-check { width: 20px; height: 20px; display: grid; place-items: center; border: 2px solid #6d5944; font: bold 17px/1 Arial; }
+    .paper-check.checked { background: #4a7d55; border-color: #4a7d55; color: #fff8da; }
+    .paper-divider { margin: 17px 0 12px; border-top: 2px dashed #94795a; }
+    .paper-total { font: bold 16px Georgia, serif; }
+    .paper-checkout { width: 100%; margin-top: 15px; pointer-events: auto; }
+    .fruit-button { position: absolute; width: 58px; height: 58px; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; filter: drop-shadow(2px 3px 1px rgba(40,20,10,.35)); transition: transform 150ms ease, filter 150ms ease; }
+    .fruit-button:hover { transform: translate(-50%, -50%) scale(1.17); filter: drop-shadow(0 0 8px #fff0a3); }
+    .fruit-button img, .flying-fruit img { width: 100%; height: 100%; object-fit: contain; }
+    .flying-fruit { position: fixed; z-index: 20; width: 42px; height: 42px; pointer-events: none; transition: left 500ms ease-in, top 500ms ease-in, transform 500ms ease-in, opacity 500ms ease-in; }
+    .stall-dialogue { position: fixed; z-index: 12; right: 24px; bottom: 24px; width: min(320px, calc(100vw - 48px)); padding: 15px 17px; border: 2px solid #f6dfa1; border-radius: 14px; background: #2c4844; color: #fff8dc; box-shadow: 3px 4px 0 rgba(20,20,20,.3); font-size: 14px; line-height: 1.35; pointer-events: auto; }
+    .dialogue-speaker { display: block; margin-bottom: 5px; color: #ffd978; font: bold 12px ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; }
+    .reply-options, .payment-box { display: grid; gap: 8px; margin-top: 12px; }
+    .stall-action { border: 2px solid #f2d17c; background: #80503b; color: #fff8dc; padding: 9px 11px; font: 13px ui-monospace, monospace; cursor: pointer; }
+    .stall-action:hover { background: #9a6548; }
+    .stall-action:disabled { cursor: not-allowed; opacity: .45; }
+    .payment-box { grid-template-columns: 1fr auto; }
+    .payment-box input { min-width: 0; border: 2px solid #b28c60; padding: 9px; color: #3f2a1d; font: 15px ui-monospace, monospace; }
+    .leave-stall { position: absolute; left: 24px; top: 22px; pointer-events: auto; }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <div id="interaction-prompt" role="status">Press <strong>E</strong> to interact</div>
+  <div id="stall-overlay" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script>
+    (() => {
+      const WORLD_WIDTH = 2048, WORLD_HEIGHT = 768;
+
+      class MarketStreet extends Phaser.Scene {
+        constructor() { super('market-street'); }
+        preload() {
+          // `public/` is needed when this file is double-clicked; Vite exposes
+          // the same folder at its web root when previewing during development.
+          const assetPath = window.location.protocol === 'file:' ? 'public/' : '/';
+          this.load.image('street', assetPath + 'background-extended.png');
+          this.load.image('stall-interior', assetPath + 'stall-overscan.png');
+          this.load.image('player-sheet', assetPath + 'player-spritesheet.png');
+          this.load.image('shopkeeper-reactions', assetPath + 'spritesheet2.png');
+          this.load.image('shopkeeper-change-happy-source', assetPath + 'happy shopkeeper.png');
+        }
+        create() {
+          this.add.image(0, 0, 'street').setOrigin(0, 0);
+          this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+          this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+          this.makePlayerTexture();
+          this.makeShopkeeperExpressionSheet();
+          this.makeHappyChangeShopkeeper();
+          this.anims.create({ key: 'idle-up', frames: [{ key: 'player-sprite', frame: 0 }], frameRate: 1, repeat: -1 });
+          this.anims.create({ key: 'walk-down', frames: [1, 2, 3].map(frame => ({ key: 'player-sprite', frame })), frameRate: 6, repeat: -1 });
+          this.anims.create({ key: 'walk-side', frames: [4, 5, 6, 7].map(frame => ({ key: 'player-sprite', frame })), frameRate: 8, repeat: -1 });
+
+          this.player = this.physics.add.sprite(1040, 560, 'player-sprite', 0);
+          this.player.setDisplaySize(62, 90).setDepth(5).setCollideWorldBounds(true);
+          this.player.body.setSize(34, 24).setOffset(27, 96);
+          this.cursors = this.input.keyboard.createCursorKeys();
+          this.wasd = this.input.keyboard.addKeys('W,A,S,D');
+          this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+          this.input.keyboard.on('keydown-P', () => alert('Progress tracking will be added with the task flow.'));
+
+          this.makeNeutralShopkeeper();
+          this.shopkeeperGlow = this.add.circle(1300, 605, 44, 0xffd369, .20).setDepth(3);
+          this.tweens.add({ targets: this.shopkeeperGlow, alpha: .42, scale: 1.17, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+          this.shopkeeper = this.add.image(1300, 545, 'shopkeeper-neutral').setDisplaySize(78, 105).setDepth(4);
+          this.interactionPrompt = document.getElementById('interaction-prompt');
+        }
+        makePlayerTexture() {
+          const source = this.textures.get('player-sheet').getSourceImage();
+          // Source is 382×232. Pad to 384×232 so its visual 4×2 layout maps
+          // exactly to eight uniform 96×116 frames.
+          const canvas = document.createElement('canvas'); canvas.width = 384; canvas.height = 232;
+          const context = canvas.getContext('2d', { willReadFrequently: true });
+          context.drawImage(source, 0, 0);
+          const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+          const [keyR, keyG, keyB] = pixels.data;
+          for (let i = 0; i < pixels.data.length; i += 4) {
+            const distance = Math.hypot(pixels.data[i] - keyR, pixels.data[i + 1] - keyG, pixels.data[i + 2] - keyB);
+            if (distance < 18) pixels.data[i + 3] = 0;
+          }
+          context.putImageData(pixels, 0, 0);
+          this.textures.addSpriteSheet('player-sprite', canvas, { frameWidth: 96, frameHeight: 116 });
+        }
+        makeNeutralShopkeeper() {
+          const source = this.textures.get('shopkeeper-reactions').getSourceImage();
+          // The neutral reaction is the middle figure in spritesheet2.
+          const canvas = document.createElement('canvas'); canvas.width = 440; canvas.height = 590;
+          const context = canvas.getContext('2d', { willReadFrequently: true });
+          context.drawImage(source, 480, 90, 440, 590, 0, 0, 440, 590);
+          const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+          const [keyR, keyG, keyB] = pixels.data;
+          for (let i = 0; i < pixels.data.length; i += 4) {
+            if (Math.hypot(pixels.data[i] - keyR, pixels.data[i + 1] - keyG, pixels.data[i + 2] - keyB) < 18) pixels.data[i + 3] = 0;
+          }
+          context.putImageData(pixels, 0, 0);
+          this.textures.addCanvas('shopkeeper-neutral', canvas);
+        }
+        makeShopkeeperExpressionSheet() {
+          const source = this.textures.get('shopkeeper-reactions').getSourceImage();
+          const frameWidth = 440, frameHeight = 590;
+          const canvas = document.createElement('canvas'); canvas.width = frameWidth * 3; canvas.height = frameHeight;
+          const context = canvas.getContext('2d', { willReadFrequently: true });
+          // Happy, neutral, and sad crops from the supplied reaction sheet.
+          [[150, 90], [480, 90], [920, 90]].forEach(([x, y], frame) => context.drawImage(source, x, y, frameWidth, frameHeight, frame * frameWidth, 0, frameWidth, frameHeight));
+          const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+          for (let frame = 0; frame < 3; frame++) {
+            const start = frame * frameWidth * 4;
+            const keyR = pixels.data[start], keyG = pixels.data[start + 1], keyB = pixels.data[start + 2];
+            for (let y = 0; y < frameHeight; y++) for (let x = 0; x < frameWidth; x++) {
+              const index = (y * canvas.width + frame * frameWidth + x) * 4;
+              if (Math.hypot(pixels.data[index] - keyR, pixels.data[index + 1] - keyG, pixels.data[index + 2] - keyB) < 18) pixels.data[index + 3] = 0;
+            }
+          }
+          context.putImageData(pixels, 0, 0);
+          this.textures.addSpriteSheet('shopkeeper-expressions', canvas, { frameWidth, frameHeight });
+        }
+        makeHappyChangeShopkeeper() {
+          const source = this.textures.get('shopkeeper-change-happy-source').getSourceImage();
+          const canvas = document.createElement('canvas'); canvas.width = 460; canvas.height = 600;
+          const context = canvas.getContext('2d', { willReadFrequently: true });
+          context.drawImage(source, 400, 75, 460, 600, 0, 0, 460, 600);
+          const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+          for (let i = 0; i < pixels.data.length; i += 4) {
+            const r = pixels.data[i], g = pixels.data[i + 1], b = pixels.data[i + 2];
+            const neutralGrey = Math.max(r, g, b) - Math.min(r, g, b) < 12 && (r + g + b) / 3 > 75 && (r + g + b) / 3 < 190;
+            if (neutralGrey) pixels.data[i + 3] = 0;
+          }
+          context.putImageData(pixels, 0, 0);
+          this.textures.addCanvas('shopkeeper-change-happy', canvas);
+        }
+        updateInteractionPrompt() {
+          const nearby = this.isNearShopkeeper();
+          this.interactionPrompt.classList.toggle('visible', nearby);
+          if (!nearby) return;
+          const bounds = this.game.canvas.getBoundingClientRect();
+          const scaleX = bounds.width / this.scale.width;
+          const scaleY = bounds.height / this.scale.height;
+          this.interactionPrompt.style.left = `${bounds.left + (this.shopkeeper.x - this.cameras.main.scrollX) * scaleX}px`;
+          this.interactionPrompt.style.top = `${bounds.top + (this.shopkeeper.y - 76 - this.cameras.main.scrollY) * scaleY}px`;
+        }
+        isNearShopkeeper() {
+          return Phaser.Math.Distance.Between(this.player.x, this.player.y, this.shopkeeper.x, this.shopkeeper.y) <= 115;
+        }
+        enterFruitStall() {
+          if (this.transitioning) return;
+          this.transitioning = true;
+          this.player.setVelocity(0, 0);
+          this.interactionPrompt.classList.remove('visible');
+          this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.pause();
+            this.scene.launch('fruit-stall', { returnScene: 'market-street' });
+          });
+          this.cameras.main.fadeOut(400, 19, 35, 40);
+        }
+        update() {
+          if (this.transitioning) {
+            this.player.setVelocity(0, 0);
+            return;
+          }
+          const up = this.cursors.up.isDown || this.wasd.W.isDown;
+          const down = this.cursors.down.isDown || this.wasd.S.isDown;
+          const left = this.cursors.left.isDown || this.wasd.A.isDown;
+          const right = this.cursors.right.isDown || this.wasd.D.isDown;
+          const speed = 130;
+          this.player.setVelocity(0, 0);
+
+          if (up) {
+            this.player.setVelocityY(-speed).setFlipX(false).anims.stop();
+            this.player.setFrame(0);
+          } else if (down) {
+            this.player.setVelocityY(speed).setFlipX(false).play('walk-down', true);
+          } else if (left) {
+            this.player.setVelocityX(-speed).setFlipX(false).play('walk-side', true);
+          } else if (right) {
+            this.player.setVelocityX(speed).setFlipX(true).play('walk-side', true);
+          } else {
+            this.player.anims.stop();
+          }
+          this.updateInteractionPrompt();
+          if (this.isNearShopkeeper() && Phaser.Input.Keyboard.JustDown(this.interactKey)) this.enterFruitStall();
+        }
+      }
+
+      class FruitStall extends Phaser.Scene {
+        constructor() { super('fruit-stall'); }
+        create(data) {
+          this.returnScene = data.returnScene;
+          this.target = { apple: 2, banana: 1 };
+          this.prices = { apple: 15, banana: 15 };
+          this.totalDue = this.target.apple * this.prices.apple + this.target.banana * this.prices.banana;
+          this.cart = [];
+          this.clickEvents = [];
+          this.counts = { apple: 0, banana: 0, orange: 0 };
+          this.correctClicks = 0;
+          this.mistakes = 0;
+          this.itemsRemoved = 0;
+          this.completed = false;
+          this.checkoutStarted = false;
+          this.dialogueChosen = null;
+          this.payment = null;
+          this.paymentAttempts = [];
+          this.logged = false;
+          this.startedAt = Date.now();
+          this.createLayout();
+          this.scale.on('resize', this.createLayout, this);
+          this.events.once('shutdown', () => document.getElementById('stall-overlay').replaceChildren());
+          this.cameras.main.fadeIn(400, 19, 35, 40);
+        }
+        createLayout() {
+          this.children.removeAll(true);
+          const width = this.scale.width, height = this.scale.height;
+          const sourceWidth = 2048, sourceHeight = 768;
+          // Cover uses the new overscan scenery, so the playable stall stays
+          // visible while the screen has no empty edges.
+          this.sceneScale = Math.max(width / sourceWidth, height / sourceHeight);
+          this.offsetX = (width - sourceWidth * this.sceneScale) / 2;
+          this.offsetY = (height - sourceHeight * this.sceneScale) / 2;
+          this.add.image(width / 2, height / 2, 'stall-interior').setDisplaySize(sourceWidth * this.sceneScale, sourceHeight * this.sceneScale);
+          this.shopkeeperSprite = this.add.sprite(...this.toScene(1435, 515), 'shopkeeper-expressions', 1).setDisplaySize(280 * this.sceneScale, 378 * this.sceneScale).setDepth(2);
+          const glow = this.add.circle(...this.toScene(1435, 704), 92 * this.sceneScale, 0xffd369, .18).setDepth(1);
+          this.tweens.add({ targets: glow, alpha: .36, scale: 1.13, duration: 900, yoyo: true, repeat: -1 });
+          this.createDomOverlay();
+        }
+        toScene(x, y) { return [this.offsetX + x * this.sceneScale, this.offsetY + y * this.sceneScale]; }
+        canvasPoint(x, y) {
+          const bounds = this.game.canvas.getBoundingClientRect();
+          return { left: bounds.left + x * bounds.width / this.scale.width, top: bounds.top + y * bounds.height / this.scale.height };
+        }
+        fruitImage(name) {
+          const assetPath = window.location.protocol === 'file:' ? 'public/' : '/';
+          return `<img src="${assetPath}${name}.png" alt="${name}" />`;
+        }
+        createDomOverlay() {
+          const overlay = document.getElementById('stall-overlay');
+          overlay.classList.add('active');
+          const fruitPoints = { apple: this.toScene(838, 460), banana: this.toScene(970, 450), orange: this.toScene(1122, 455) };
+          overlay.innerHTML = `
+            <button class="stall-action leave-stall" type="button">Leave ×</button>
+            <section class="paper-list" aria-label="Shopping list">
+              <h2>Shopping list</h2>
+              <div class="paper-row" data-item="apple" role="button" tabindex="0"><span class="paper-check"></span><span class="paper-label"></span></div>
+              <div class="paper-row" data-item="banana" role="button" tabindex="0"><span class="paper-check"></span><span class="paper-label"></span></div>
+              <div class="paper-row" data-item="orange" role="button" tabindex="0"><span class="paper-check"></span><span class="paper-label"></span></div>
+              <div class="paper-divider"></div><div class="paper-total"></div>
+              <button class="stall-action paper-checkout" id="begin-payment" type="button">Done shopping</button>
+            </section>
+            ${Object.entries(fruitPoints).map(([name, point]) => { const pos = this.canvasPoint(...point); return `<button class="fruit-button" data-fruit="${name}" style="left:${pos.left}px;top:${pos.top}px;transform:translate(-50%,-50%)" aria-label="Add ${name}">${this.fruitImage(name)}</button>`; }).join('')}
+            <div class="stall-dialogue" hidden></div>`;
+          overlay.querySelector('.leave-stall').addEventListener('click', () => this.leaveEarly());
+          overlay.querySelectorAll('.fruit-button').forEach(button => {
+            button.addEventListener('click', event => this.selectFruit(button.dataset.fruit, event.currentTarget));
+            this.removeFruitBackground(button.querySelector('img'));
+          });
+          overlay.querySelectorAll('.paper-row').forEach(row => {
+            const remove = () => this.removeFruit(row.dataset.item);
+            row.addEventListener('click', remove);
+            row.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); remove(); } });
+          });
+          const checkoutButton = overlay.querySelector('#begin-payment');
+          checkoutButton.onclick = event => { event.preventDefault(); this.finishTask(); };
+          this.updatePaperList();
+          if (this.checkoutStarted) this.showCheckoutDialogue();
+        }
+        updatePaperList() {
+          const overlay = document.getElementById('stall-overlay');
+          ['apple', 'banana', 'orange'].forEach(name => {
+            const row = overlay.querySelector(`[data-item="${name}"]`);
+            if (!row) return;
+            const actual = this.counts[name];
+            const quantity = this.target[name] || 0;
+            const complete = name !== 'orange' && actual === quantity;
+            const over = actual > quantity;
+            row.classList.toggle('pending', actual < quantity);
+            row.classList.toggle('empty', actual === 0);
+            row.classList.toggle('over', over);
+            row.querySelector('.paper-label').textContent = name === 'orange'
+              ? `Oranges x${actual}  (not on list)`
+              : over
+              ? `${name === 'apple' ? 'Apples' : 'Bananas'} x${actual}  (need x${quantity})`
+              : `${name === 'apple' ? 'Apples' : 'Bananas'} x${actual}/${quantity}`;
+            row.querySelector('.paper-check').classList.toggle('checked', name !== 'orange' && complete);
+            row.querySelector('.paper-check').textContent = complete ? '✓' : '';
+            let warning = row.querySelector('.paper-warning');
+            if (over && !warning) { warning = document.createElement('span'); warning.className = 'paper-warning'; row.appendChild(warning); }
+            if (warning) warning.textContent = over ? '!' : '';
+          });
+          const total = overlay.querySelector('.paper-total');
+          if (total) total.textContent = `Total due: Rs ${this.totalDue}`;
+        }
+        removeFruitBackground(image) {
+          const process = () => {
+            const canvas = document.createElement('canvas'); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+            const context = canvas.getContext('2d', { willReadFrequently: true });
+            context.drawImage(image, 0, 0);
+            const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+            const visited = new Uint8Array(canvas.width * canvas.height);
+            const isChecker = index => {
+              const r = pixels.data[index * 4], g = pixels.data[index * 4 + 1], b = pixels.data[index * 4 + 2];
+              return Math.max(r, g, b) - Math.min(r, g, b) < 10 && r > 185;
+            };
+            const queue = [];
+            const add = (x, y) => { const index = y * canvas.width + x; if (!visited[index] && isChecker(index)) { visited[index] = 1; queue.push(index); } };
+            for (let x = 0; x < canvas.width; x++) { add(x, 0); add(x, canvas.height - 1); }
+            for (let y = 0; y < canvas.height; y++) { add(0, y); add(canvas.width - 1, y); }
+            for (let head = 0; head < queue.length; head++) {
+              const index = queue[head], x = index % canvas.width, y = Math.floor(index / canvas.width);
+              pixels.data[index * 4 + 3] = 0;
+              if (x) add(x - 1, y); if (x < canvas.width - 1) add(x + 1, y); if (y) add(x, y - 1); if (y < canvas.height - 1) add(x, y + 1);
+            }
+            context.putImageData(pixels, 0, 0);
+            image.src = canvas.toDataURL('image/png');
+          };
+          if (image.complete && image.naturalWidth) process();
+          else image.addEventListener('load', process, { once: true });
+        }
+        flyFruit(button, name) {
+          const start = button.getBoundingClientRect();
+          const targetNode = document.querySelector(`.paper-row[data-item="${name}"] .paper-check`) || document.querySelector('.paper-list');
+          const target = targetNode.getBoundingClientRect();
+          const flyer = document.createElement('div'); flyer.className = 'flying-fruit'; flyer.innerHTML = button.querySelector('img').outerHTML;
+          flyer.style.left = `${start.left + start.width / 2}px`; flyer.style.top = `${start.top + start.height / 2}px`;
+          document.body.appendChild(flyer);
+          requestAnimationFrame(() => { flyer.style.left = `${target.left + target.width / 2}px`; flyer.style.top = `${target.top + target.height / 2}px`; flyer.style.transform = 'translate(-50%, -50%) scale(.35)'; flyer.style.opacity = '0'; });
+          window.setTimeout(() => flyer.remove(), 550);
+        }
+        selectFruit(name, button) {
+          const timestamp = Date.now();
+          this.counts[name] += 1;
+          const wasCorrect = this.counts[name] <= (this.target[name] || 0);
+          const clickEvent = { fruit: name, timestamp, action: 'added', wasCorrect };
+          this.cart.push(clickEvent);
+          this.clickEvents.push(clickEvent);
+          if (wasCorrect) this.correctClicks += 1;
+          else this.mistakes += 1;
+          button.animate([{ transform: 'translate(-50%, -50%) scale(1)' }, { transform: 'translate(-50%, -50%) scale(1.28)' }, { transform: 'translate(-50%, -50%) scale(1)' }], { duration: 230, easing: 'ease-out' });
+          this.flyFruit(button, name);
+          this.updatePaperList();
+        }
+        removeFruit(name) {
+          if (!this.counts[name]) return;
+          for (let index = this.cart.length - 1; index >= 0; index--) {
+            if (this.cart[index].fruit === name) { this.cart.splice(index, 1); break; }
+          }
+          this.counts[name] -= 1;
+          this.itemsRemoved += 1;
+          this.clickEvents.push({ fruit: name, timestamp: Date.now(), action: 'removed' });
+          if (!this.counts.apple || !this.counts.banana || this.counts.apple < this.target.apple || this.counts.banana < this.target.banana) {
+            this.completed = false;
+            this.checkoutStarted = false;
+            const dialogue = document.querySelector('.stall-dialogue');
+            if (dialogue) dialogue.hidden = true;
+          }
+          this.updatePaperList();
+        }
+        finishTask() {
+          if (this.counts.apple < this.target.apple || this.counts.banana < this.target.banana) {
+            this.setDialogue('Shopkeeper', `Your list still needs ${Math.max(0, this.target.apple - this.counts.apple)} apple(s) and ${Math.max(0, this.target.banana - this.counts.banana)} banana(s).`);
+            return;
+          }
+          if (this.checkoutStarted) return;
+          this.completed = true;
+          this.checkoutStarted = true;
+          this.showCheckoutDialogue();
+        }
+        showCheckoutDialogue() {
+          this.setDialogue('Shopkeeper', `That'll be Rs ${this.totalDue}.`, `<div class="reply-options"><button class="stall-action" data-reply="Here you go">Here you go</button></div>`);
+          document.querySelectorAll('[data-reply]').forEach(button => button.addEventListener('click', () => this.chooseReply(button.dataset.reply)));
+        }
+        setDialogue(speaker, text, controls = '') {
+          const dialogue = document.querySelector('.stall-dialogue');
+          dialogue.innerHTML = `<span class="dialogue-speaker">${speaker}</span><div>${text}</div>${controls}`; dialogue.hidden = false;
+        }
+        chooseReply(reply) {
+          this.dialogueChosen = reply;
+          this.setDialogue('You', reply);
+          window.setTimeout(() => this.showPaymentInput(), 450);
+        }
+        showPaymentInput() {
+          this.setDialogue('Shopkeeper', 'How much would you like to give?', `<div class="payment-box"><input id="payment-amount" type="number" min="0" inputmode="numeric" placeholder="Rs amount" value="${this.lastAmount ?? ''}" /><button class="stall-action" id="give-payment">Give</button></div>`);
+          const input = document.getElementById('payment-amount');
+          input.focus();
+          document.getElementById('give-payment').addEventListener('click', () => this.submitPayment());
+          input.addEventListener('keydown', event => { if (event.key === 'Enter') this.submitPayment(); });
+        }
+        submitPayment() {
+          const input = document.getElementById('payment-amount');
+          const amount = Number(input.value);
+          if (!Number.isFinite(amount) || amount < 0) { this.setDialogue('Shopkeeper', 'Please enter a valid amount.'); this.showPaymentInput(); return; }
+          const difference = amount - this.totalDue;
+          const wasCorrect = difference === 0;
+          this.lastAmount = amount;
+          this.paymentAttempts.push({ amountGiven: amount, wasCorrect, timestamp: Date.now() });
+          let reactionType, message;
+          if (difference === 0) {
+            reactionType = 'happy'; message = 'Thank you!';
+            this.shopkeeperSprite.setTexture('shopkeeper-expressions').setDisplaySize(280 * this.sceneScale, 378 * this.sceneScale).setFrame(0);
+          } else if (difference < 0) {
+            reactionType = 'sad'; message = "That's not enough.";
+            this.shopkeeperSprite.setTexture('shopkeeper-expressions').setDisplaySize(280 * this.sceneScale, 378 * this.sceneScale).setFrame(2);
+          } else {
+            reactionType = 'change'; message = `Here's your change, Rs ${difference}.`;
+            this.shopkeeperSprite.setAlpha(0).setTexture('shopkeeper-change-happy').setDisplaySize(300 * this.sceneScale, 390 * this.sceneScale);
+            this.tweens.add({ targets: this.shopkeeperSprite, alpha: 1, duration: 240, ease: 'Sine.out' });
+          }
+          this.payment = { amountAsked: this.totalDue, totalAsked: this.totalDue, amountGiven: amount, difference, reactionType, dialogueChosen: this.dialogueChosen, timestamp: Date.now() };
+          if (difference < 0) { this.setDialogue('Shopkeeper', message, `<div class="payment-box"><input id="payment-amount" type="number" min="0" inputmode="numeric" value="${amount}" /><button class="stall-action" id="give-payment">Give</button></div>`); const retryInput = document.getElementById('payment-amount'); document.getElementById('give-payment').addEventListener('click', () => this.submitPayment()); retryInput.addEventListener('keydown', event => { if (event.key === 'Enter') this.submitPayment(); }); retryInput.focus(); return; }
+          if (difference > 0) { this.setDialogue('Shopkeeper', message, '<div class="reply-options"><button class="stall-action" id="exit-stall">Exit</button></div>'); document.getElementById('exit-stall').addEventListener('click', () => this.returnToWorld(true)); return; }
+          this.setDialogue('Shopkeeper', `${message} Returning to the street…`);
+          window.setTimeout(() => this.returnToWorld(true), 2500);
+        }
+        taskResult(incomplete) {
+          const total = this.cart.length;
+          return { taskName: 'buy_fruit', duration: Date.now() - this.startedAt, mistakes: this.mistakes, cartMistakes: this.mistakes, itemsRemoved: this.itemsRemoved, accuracy: total ? this.correctClicks / total : 0, timestamp: Date.now(), incomplete, cart: this.cart, clickEvents: this.clickEvents, paymentAttempts: this.paymentAttempts, ...(this.payment || { amountAsked: this.totalDue, totalAsked: this.totalDue, amountGiven: null, difference: null, reactionType: 'incomplete', dialogueChosen: this.dialogueChosen }) };
+        }
+        logResult(incomplete) {
+          if (this.logged) return;
+          this.logged = true;
+          const key = 'marketStreetTaskResults';
+          const attempts = JSON.parse(localStorage.getItem(key) || '[]');
+          attempts.push(this.taskResult(incomplete));
+          localStorage.setItem(key, JSON.stringify(attempts));
+        }
+        leaveEarly() { this.returnToWorld(false); }
+        returnToWorld(completed) {
+          this.logResult(!completed);
+          this.cameras.main.once('camerafadeoutcomplete', () => {
+            const world = this.scene.get(this.returnScene);
+            world.transitioning = false;
+            world.scene.resume();
+            world.cameras.main.fadeIn(400, 19, 35, 40);
+            this.scene.stop();
+          });
+          this.cameras.main.fadeOut(400, 19, 35, 40);
+        }
+      }
+
+      new Phaser.Game({ type: Phaser.AUTO, parent: 'game', width: WORLD_WIDTH, height: WORLD_HEIGHT, backgroundColor: '#152832', physics: { default: 'arcade' }, scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH }, scene: [MarketStreet, FruitStall] });
+    })();
+  </script>
+</body>
 </html>
