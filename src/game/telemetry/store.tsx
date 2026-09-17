@@ -1,7 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useProfile, scopedKey } from "../profiles/ProfileContext";
+import { recordForHealthWorker } from "../sync/queue";
+import type { HealthWorkerEvent } from "../../health-worker/boundary";
+import type { CognitiveDomain } from "../../data/domains";
 
 export type TelemetryEvent =
+  /** A caregiver handed the device over. Sessions are only ever started this way. */
+  | { type: "session_start"; sessionId: string; activityId: string; chosenBy: "app" | "caregiver"; timestamp: number }
+  | { type: "session_end"; sessionId: string; timestamp: number }
   | { type: "navigate"; to: string; misses: number; elapsedMs: number; timestamp: number }
   | { type: "dialogue"; npcId: string; locationId: string; timestamp: number }
   | { type: "comfort"; locationId: string; contentType: string; timestamp: number }
@@ -37,6 +43,26 @@ function saveEvents(key: string, events: TelemetryEvent[]) {
   }
 }
 
+/**
+ * The slice of an event that may cross the health-worker boundary. Which activity it was
+ * (its id, title, choices) stays on the device; only domain, help and time go forward.
+ */
+function healthWorkerSlice(e: TelemetryEvent): HealthWorkerEvent | null {
+  switch (e.type) {
+    case "activity_complete":
+      return { kind: "activity", t: e.timestamp, domain: e.domain as CognitiveDomain, cue: e.cueLevelReached, elapsedMs: e.elapsedMs };
+    case "session_start":
+      return { kind: "session_start", t: e.timestamp, sessionId: e.sessionId };
+    case "session_end":
+      return { kind: "session_end", t: e.timestamp, sessionId: e.sessionId };
+    case "navigate":
+      // the destination stays on the device
+      return { kind: "wayfinding", t: e.timestamp, extraTaps: e.misses };
+    default:
+      return null;
+  }
+}
+
 interface TelemetryContextValue {
   events: TelemetryEvent[];
   log: (e: TelemetryEvent) => void;
@@ -51,12 +77,16 @@ export function TelemetryProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<TelemetryEvent[]>(() => loadEvents(key));
   const keyRef = useRef(key);
   keyRef.current = key;
+  const profileRef = useRef(activeId);
+  profileRef.current = activeId;
 
   useEffect(() => {
     setEvents(loadEvents(scopedKey(STORAGE_KEY, activeId)));
   }, [activeId]);
 
   const log = useCallback((e: TelemetryEvent) => {
+    const slice = healthWorkerSlice(e);
+    if (slice) recordForHealthWorker(profileRef.current, slice);
     setEvents((prev) => {
       const next = [...prev, e].slice(-MAX_EVENTS);
       saveEvents(keyRef.current, next);
@@ -127,7 +157,7 @@ export function summarizeSession(events: TelemetryEvent[]): SessionSummary {
     } else if (avgCueLevel <= 2.2) {
       observations.push("Needed additional visual cues to complete some activities.");
     } else {
-      observations.push("Completed activities after moderate to substantial assistance — consider revisiting simpler versions next time.");
+      observations.push("Needed quite a lot of help to finish activities — simpler versions may suit better next time.");
     }
 
     const speedy = completions.filter((c) => c.elapsedMs < 20000).length;

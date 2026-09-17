@@ -1,3 +1,5 @@
+// @loom-vault — holds family details: household names and caregiver notes. Must never be reachable from the health-worker route (/asha).
+// tests/boundary.test.ts finds every file carrying this marker and fails if /asha can import it.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export interface Profile {
@@ -6,6 +8,16 @@ export interface Profile {
   /** Free-text notes the caregiver keeps — village they grew up in, who's who, what soothes them. */
   notes: string;
   createdAt: number;
+  /** The person being cared for — `name` above is often a household label. */
+  person?: PersonDetails;
+}
+
+export interface PersonDetails {
+  /** As they'd like it written, e.g. "Kamala Devi". */
+  fullName: string;
+  birthYear: number | null;
+  /** How app text refers to them. "name" avoids pronouns altogether. */
+  pronouns: "name" | "she" | "he" | "they";
 }
 
 interface ProfileState {
@@ -45,6 +57,7 @@ interface ProfileContextValue {
   renameProfile: (id: string, name: string) => void;
   setNotes: (id: string, notes: string) => void;
   removeProfile: (id: string) => void;
+  setPerson: (id: string, person: PersonDetails) => void;
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
@@ -80,6 +93,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, profiles: s.profiles.map((p) => (p.id === id ? { ...p, notes } : p)) }));
   }, []);
 
+  const setPerson = useCallback((id: string, person: PersonDetails) => {
+    setState((s) => ({ ...s, profiles: s.profiles.map((p) => (p.id === id ? { ...p, person } : p)) }));
+  }, []);
+
   const removeProfile = useCallback((id: string) => {
     setState((s) => {
       if (s.profiles.length <= 1) return s;
@@ -99,8 +116,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       renameProfile,
       setNotes,
       removeProfile,
+      setPerson,
     };
-  }, [state, setActive, addProfile, renameProfile, setNotes, removeProfile]);
+  }, [state, setActive, addProfile, renameProfile, setNotes, removeProfile, setPerson]);
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
 }

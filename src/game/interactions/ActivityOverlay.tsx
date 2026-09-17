@@ -6,7 +6,9 @@ import { PixelSprite } from "../../components/pixel/PixelSprite";
 import { numberCard } from "../../engine/sprites/props";
 import { outlineBitmap } from "../../engine/pixelArt";
 import { useTelemetry } from "../telemetry/store";
-import { profileForDomain } from "../adapt/difficulty";
+import { DEFAULT_IDLE_CUE_MS, profileForDomain } from "../adapt/difficulty";
+import { latestRudas, RUDAS_KEY, startingBands, type RudasRecord } from "../clinical/rudas";
+import { usePersistentState } from "../state/usePersistentState";
 import { speechEngine } from "../speech/SpeechEngine";
 import { useSettings } from "../state/SettingsContext";
 import { useSession } from "../session/SessionContext";
@@ -28,8 +30,6 @@ function shuffled<T>(arr: T[]): T[] {
   return a;
 }
 
-/** Idle time before the cue ladder offers a little more help on its own. */
-const IDLE_CUE_MS = 9000;
 
 /** Scale a sprite so it fills most of a tile regardless of its native size. */
 function fitScale(render: () => HTMLCanvasElement, box = 62): number {
@@ -163,11 +163,19 @@ export function ActivityOverlay({ activity, locationId, onComplete, onClose }: A
   const { log, events } = useTelemetry();
   const { settings } = useSettings();
   const { addMemory, noteActivityComplete } = useSession();
+  const [rudas] = usePersistentState<RudasRecord[]>(RUDAS_KEY, []);
 
   // How much support this domain has needed lately decides how many choices appear
   // and whether the first cue is already showing when the activity opens.
   const profile = useMemo(
-    () => (settings.adaptiveDifficulty ? profileForDomain(events, activity.domain) : null),
+    () => {
+      if (!settings.adaptiveDifficulty) return null;
+      const latest = latestRudas(rudas);
+      return profileForDomain(events, activity.domain, {
+        startingBand: latest ? startingBands(latest)[activity.domain] : null,
+        override: settings.adaptiveOverrides?.[activity.domain] ?? null,
+      });
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [activity.id, settings.adaptiveDifficulty],
   );
@@ -238,7 +246,7 @@ export function ActivityOverlay({ activity, locationId, onComplete, onClose }: A
   useEffect(() => {
     if (finished) return;
     const timer = window.setInterval(() => {
-      if (Date.now() - lastInteractionRef.current >= IDLE_CUE_MS) {
+      if (Date.now() - lastInteractionRef.current >= (profile?.idleCueMs ?? DEFAULT_IDLE_CUE_MS)) {
         lastInteractionRef.current = Date.now();
         setCueLevel((c) => {
           const next = Math.min(4, c + 1);
@@ -248,7 +256,7 @@ export function ActivityOverlay({ activity, locationId, onComplete, onClose }: A
       }
     }, 1500);
     return () => window.clearInterval(timer);
-  }, [finished]);
+  }, [finished, profile?.idleCueMs]);
 
   function bumpCue() {
     lastInteractionRef.current = Date.now();

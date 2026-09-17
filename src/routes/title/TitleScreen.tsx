@@ -14,6 +14,7 @@ export interface TitleScreenProps {
   onPlay: () => void;
   onContinue: () => void;
   onCaregiver: () => void;
+  onHealthWorker: () => void;
 }
 
 const PLACE_NAMES: Record<string, string> = {
@@ -32,7 +33,7 @@ const PLACE_NAMES: Record<string, string> = {
  * sprite in the game is rasterised in the background. Only one button really matters,
  * and it's the biggest thing on screen.
  */
-export function TitleScreen({ onPlay, onContinue, onCaregiver }: TitleScreenProps) {
+export function TitleScreen({ onPlay, onContinue, onCaregiver, onHealthWorker }: TitleScreenProps) {
   const { settings } = useSettings();
   const { lastLocation, guideIndex } = useSession();
   const { active } = useProfile();
@@ -149,21 +150,33 @@ export function TitleScreen({ onPlay, onContinue, onCaregiver }: TitleScreenProp
         </div>
       </div>
 
-      {/* quiet corner chrome: who this is for, and the carer's way in */}
-      <div className="absolute bottom-4 left-4 flex items-center gap-2">
-        <PixelSprite bitmap={loomMark} scale={1} />
-        <span className="text-[#c9b894] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" style={{ fontSize: 12 * ts }}>
-          {active.name}
-        </span>
-      </div>
+      {/* quiet corner chrome: who this is for, and the ways in for carers and health workers.
+          One wrapping row, so on a narrow screen the buttons drop below the name instead of overlapping it. */}
+      <div className="absolute inset-x-4 bottom-4 flex flex-wrap items-end justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <PixelSprite bitmap={loomMark} scale={1} />
+          <span className="text-[#c9b894] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" style={{ fontSize: 12 * ts }}>
+            {active.name}
+          </span>
+        </div>
 
-      <button
-        onClick={() => start(onCaregiver)}
-        className="absolute bottom-4 right-4 rounded-lg px-3 py-2 text-[#c9b894] transition-colors hover:text-[#f2e3c4] focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
-        style={{ background: "rgba(12,9,6,0.6)", border: "1px solid #3c2a1c", fontSize: 12.5 * ts }}
-      >
-        Carer setup
-      </button>
+        <div className="ml-auto flex flex-wrap justify-end gap-2">
+          <button
+            onClick={() => start(onHealthWorker)}
+            className="rounded-lg px-3 py-2 text-[#c9b894] transition-colors hover:text-[#f2e3c4] focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
+            style={{ background: "rgba(12,9,6,0.6)", border: "1px solid #3c2a1c", fontSize: 12.5 * ts }}
+          >
+            Health worker dashboard
+          </button>
+          <button
+            onClick={() => start(onCaregiver)}
+            className="rounded-lg px-3 py-2 text-[#c9b894] transition-colors hover:text-[#f2e3c4] focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
+            style={{ background: "rgba(12,9,6,0.6)", border: "1px solid #3c2a1c", fontSize: 12.5 * ts }}
+          >
+            Carer setup
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

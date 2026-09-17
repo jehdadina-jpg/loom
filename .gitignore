@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# local health-worker sync stand-in (dev/demo only)
+.loom-sync

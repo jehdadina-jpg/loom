@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useProfile } from "../../game/profiles/ProfileContext";
+import { useProfile, type PersonDetails } from "../../game/profiles/ProfileContext";
 
 /**
  * More than one person can share a device — a health worker visiting several homes,
@@ -7,7 +7,7 @@ import { useProfile } from "../../game/profiles/ProfileContext";
  * history, album and photos; nothing is ever pooled between them.
  */
 export function PeoplePanel() {
-  const { profiles, activeId, active, setActive, addProfile, renameProfile, setNotes, removeProfile } = useProfile();
+  const { profiles, activeId, active, setActive, addProfile, renameProfile, setNotes, removeProfile, setPerson } = useProfile();
   const [newName, setNewName] = useState("");
 
   return (
@@ -19,7 +19,12 @@ export function PeoplePanel() {
         </p>
       </header>
 
-      <section className="mb-8 grid gap-3 sm:grid-cols-2">
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold text-slate-800">On this device</h2>
+        <p className="mb-3 text-slate-600">
+          {profiles.length === 1 ? "One person uses LOOM on this device." : `${profiles.length} people use LOOM on this device.`}
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
         {profiles.map((p) => {
           const isActive = p.id === activeId;
           return (
@@ -36,7 +41,7 @@ export function PeoplePanel() {
                   className="w-full bg-transparent text-lg font-semibold text-slate-800 focus:outline-none"
                 />
                 {isActive ? (
-                  <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white">
+                  <span className="shrink-0 rounded-full bg-emerald-700 px-2.5 py-1 text-sm font-medium text-white">
                     Active
                   </span>
                 ) : (
@@ -48,7 +53,7 @@ export function PeoplePanel() {
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-sm text-slate-500">
                 Added {new Date(p.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
               </p>
               {profiles.length > 1 && (
@@ -62,10 +67,12 @@ export function PeoplePanel() {
             </div>
           );
         })}
+        </div>
       </section>
 
       <section className="mb-8 rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="mb-2 font-semibold text-slate-800">Add someone</h2>
+        <h2 className="mb-1 font-semibold text-slate-800">Add someone</h2>
+        <p className="mb-2 text-sm text-slate-600">Add another person or household. Their records are kept completely separate.</p>
         <div className="flex flex-wrap gap-2">
           <input
             value={newName}
@@ -86,6 +93,12 @@ export function PeoplePanel() {
         </div>
       </section>
 
+      <PersonDetailsForm
+        key={active.id}
+        person={active.person}
+        onChange={(p) => setPerson(active.id, p)}
+      />
+
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h2 className="mb-1 font-semibold text-slate-800">Notes about {active.name}</h2>
         <p className="mb-3 text-sm text-slate-500">
@@ -101,5 +114,60 @@ export function PeoplePanel() {
         />
       </section>
     </div>
+  );
+}
+
+/** The person's own details — used on referral summaries and, name and age only, by the health worker. */
+function PersonDetailsForm({ person, onChange }: { person?: PersonDetails; onChange: (p: PersonDetails) => void }) {
+  const current: PersonDetails = person ?? { fullName: "", birthYear: null, pronouns: "name" };
+  const set = (patch: Partial<PersonDetails>) => onChange({ ...current, ...patch });
+  // typed separately so a half-typed year ("19") isn't wiped out
+  const [yearText, setYearText] = useState(current.birthYear ? String(current.birthYear) : "");
+  return (
+    <section className="mb-8 rounded-2xl border border-slate-200 bg-white p-5">
+      <h2 className="mb-1 font-semibold text-slate-800">The person being cared for</h2>
+      <p className="mb-3 text-sm text-slate-500">
+        Their own name and age go on the summary for a doctor. A health worker sees these two things and nothing else from
+        this page.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <label className="text-sm text-slate-600">
+          Full name
+          <input
+            value={current.fullName}
+            onChange={(e) => set({ fullName: e.target.value })}
+            placeholder="e.g. Kamala Devi"
+            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-base text-slate-800 focus:border-emerald-500 focus:outline-none"
+          />
+        </label>
+        <label className="text-sm text-slate-600">
+          Year of birth
+          <input
+            inputMode="numeric"
+            value={yearText}
+            onChange={(e) => {
+              setYearText(e.target.value);
+              const n = parseInt(e.target.value, 10);
+              set({ birthYear: Number.isFinite(n) && n > 1900 && n <= new Date().getFullYear() ? n : null });
+            }}
+            placeholder="e.g. 1954"
+            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-base text-slate-800 focus:border-emerald-500 focus:outline-none"
+          />
+        </label>
+        <label className="text-sm text-slate-600">
+          In app text, refer to them as
+          <select
+            value={current.pronouns}
+            onChange={(e) => set({ pronouns: e.target.value as PersonDetails["pronouns"] })}
+            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-base text-slate-800 focus:border-emerald-500 focus:outline-none"
+          >
+            <option value="name">Their name</option>
+            <option value="she">she / her</option>
+            <option value="he">he / him</option>
+            <option value="they">they / them</option>
+          </select>
+        </label>
+      </div>
+    </section>
   );
 }

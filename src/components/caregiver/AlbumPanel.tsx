@@ -54,7 +54,10 @@ export function AlbumPanel() {
       ) : (
         Object.entries(grouped).map(([day, entries]) => (
           <section key={day} className="mb-8">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">{day}</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{day}</h2>
+            <p className="mb-3 text-slate-700">
+              {entries.length === 1 ? "One moment" : `${entries.length} moments`} saved, starting with {entries[entries.length - 1].title.toLowerCase()}.
+            </p>
             <div className="grid gap-3 sm:grid-cols-2">
               {entries.map((m) => (
                 <article
@@ -67,7 +70,7 @@ export function AlbumPanel() {
                   <div>
                     <p className="font-medium text-slate-800">{m.title}</p>
                     <p className="text-slate-600">{m.note}</p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-sm text-slate-500">
                       {new Date(m.timestamp).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
                     </p>
                   </div>
