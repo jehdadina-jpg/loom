@@ -30,24 +30,43 @@ export function ComfortPanel({ locationId, onClose }: ComfortPanelProps) {
   const [playing, setPlaying] = useState<Mode | null>(null);
   const [photoIndex, setPhotoIndex] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // what's on screen right now, and when it appeared — so the dwell logged for each item
+  // is how long she actually looked at or listened to that one thing, not the whole visit.
+  const shownRef = useRef<{ itemId: string; contentType: Mode; since: number } | null>(null);
+
+  function flush() {
+    const s = shownRef.current;
+    if (!s) return;
+    log({ type: "comfort", locationId, contentType: s.contentType, itemId: s.itemId, dwellMs: Date.now() - s.since, timestamp: Date.now() });
+    shownRef.current = null;
+  }
 
   useEffect(() => {
     return () => {
+      flush();
       audioRef.current?.pause();
       speechEngine.stop();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function choose(kind: Mode) {
     setPlaying(kind);
-    log({ type: "comfort", locationId, contentType: kind, timestamp: Date.now() });
-    if (kind === "story") speechEngine.speak(STORY);
-    if (kind === "song") speechEngine.speak(SONG_LINES.join(" "));
+    if (kind === "story") {
+      shownRef.current = { itemId: "story", contentType: "story", since: Date.now() };
+      speechEngine.speak(STORY);
+    }
+    if (kind === "song") {
+      shownRef.current = { itemId: "song", contentType: "song", since: Date.now() };
+      speechEngine.speak(SONG_LINES.join(" "));
+    }
     if (kind === "photos" && photos.length) {
       setPhotoIndex(0);
+      shownRef.current = { itemId: photos[0].id, contentType: "photos", since: Date.now() };
       speechEngine.speak(photos[0].caption || "A photograph from home.");
     }
     if (kind === "voice" && settings.familyVoiceUrl) {
+      shownRef.current = { itemId: "voice", contentType: "voice", since: Date.now() };
       const el = new Audio(settings.familyVoiceUrl);
       audioRef.current = el;
       void el.play().catch(() => {
@@ -57,9 +76,16 @@ export function ComfortPanel({ locationId, onClose }: ComfortPanelProps) {
   }
 
   function showPhoto(next: number) {
+    flush();
     const idx = (next + photos.length) % photos.length;
     setPhotoIndex(idx);
+    shownRef.current = { itemId: photos[idx].id, contentType: "photos", since: Date.now() };
     speechEngine.speak(photos[idx].caption || "A photograph from home.");
+  }
+
+  function finish() {
+    flush();
+    onClose();
   }
 
   const ts = settings.textScale;
@@ -127,7 +153,7 @@ export function ComfortPanel({ locationId, onClose }: ComfortPanelProps) {
                   Next
                 </PixelButton>
               )}
-              <PixelButton tone="leaf" onClick={onClose}>
+              <PixelButton tone="leaf" onClick={finish}>
                 Done
               </PixelButton>
             </div>
@@ -156,7 +182,7 @@ export function ComfortPanel({ locationId, onClose }: ComfortPanelProps) {
                 {settings.familyVoiceLabel ?? "A voice from your family"} — recorded just for you.
               </p>
             )}
-            <PixelButton tone="leaf" onClick={onClose}>
+            <PixelButton tone="leaf" onClick={finish}>
               Done
             </PixelButton>
           </div>

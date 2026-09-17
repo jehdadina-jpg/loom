@@ -30,13 +30,13 @@ export function AlbumPanel() {
     <div className="mx-auto max-w-5xl px-6 py-8">
       <header className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Family Album</h1>
-          <p className="text-slate-500">Moments from the village — kept as memories, not results.</p>
+          <h1 className="text-3xl font-bold text-[var(--ink)]">Family Album</h1>
+          <p className="text-[var(--ink-soft)]">Moments from the village — kept as memories, not results.</p>
         </div>
         {memories.length > 0 && (
           <button
             onClick={clearMemories}
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 hover:bg-slate-50"
+            className="rounded-[6px] border-2 border-[var(--parchment2)] px-3 py-2 text-sm text-[var(--ink-soft)] hover:bg-[var(--parchment2)]"
           >
             Clear album
           </button>
@@ -44,9 +44,9 @@ export function AlbumPanel() {
       </header>
 
       {memories.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-          <p className="text-lg font-medium text-slate-700">The album is empty for now.</p>
-          <p className="mt-1 text-slate-500">
+        <div className="rounded-[6px] border border-dashed border-[var(--ink-soft)] bg-[var(--parchment)] p-10 text-center">
+          <p className="text-lg font-medium text-[var(--ink)]">The album is empty for now.</p>
+          <p className="mt-1 text-[var(--ink-soft)]">
             Each thing done in the village — making tea, naming faces, watering the garden — is saved here as a small
             note.
           </p>
@@ -54,23 +54,23 @@ export function AlbumPanel() {
       ) : (
         Object.entries(grouped).map(([day, entries]) => (
           <section key={day} className="mb-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{day}</h2>
-            <p className="mb-3 text-slate-700">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--ink-soft)]">{day}</h2>
+            <p className="mb-3 text-[var(--ink)]">
               {entries.length === 1 ? "One moment" : `${entries.length} moments`} saved, starting with {entries[entries.length - 1].title.toLowerCase()}.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               {entries.map((m) => (
                 <article
                   key={m.id}
-                  className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                  className="flex items-start gap-3 rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-4 "
                 >
-                  <div className="mt-0.5 shrink-0 rounded-lg bg-amber-50 p-2">
+                  <div className="mt-0.5 shrink-0 rounded-[6px] bg-[var(--parchment2)] p-2">
                     <PixelSprite bitmap={() => iconSprite(iconForLocation(m.locationId))} scale={2} />
                   </div>
                   <div>
-                    <p className="font-medium text-slate-800">{m.title}</p>
-                    <p className="text-slate-600">{m.note}</p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="font-medium text-[var(--ink)]">{m.title}</p>
+                    <p className="text-[var(--ink-soft)]">{m.note}</p>
+                    <p className="mt-1 text-sm text-[var(--ink-soft)]">
                       {new Date(m.timestamp).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
                     </p>
                   </div>

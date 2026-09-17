@@ -17,6 +17,10 @@ import { locationForActivity } from "../../data/activities";
 import { PLACE_NAMES } from "../../data/places";
 import { StartSessionButton } from "./SessionStarter";
 import { RemindersPanel } from "./RemindersPanel";
+import { PreservedPanel } from "./PreservedPanel";
+import { MoodPrompt } from "./MoodPrompt";
+import { TalkAboutPanel } from "./TalkAboutPanel";
+import { DoctorVisitBanner } from "./DoctorVisitBanner";
 import { Drawer } from "../shared/Drawer";
 
 const DAY = 86_400_000;
@@ -66,10 +70,12 @@ export function TodayScreen({
   onStartSession,
   onOpenAlerts,
   onOpenProgress,
+  onOpenDoctorVisit,
 }: {
   onStartSession: () => void;
   onOpenAlerts: () => void;
   onOpenProgress: () => void;
+  onOpenDoctorVisit: () => void;
 }) {
   const { events } = useTelemetry();
   const { reminders, log, now } = useReminders();
@@ -146,12 +152,20 @@ export function TodayScreen({
 
   return (
     <div className="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:px-6 sm:py-8">
-      <section className="rounded-2xl border border-[#e6d3ae] bg-[#fdf6e8] p-6 shadow-sm sm:p-8">
-        <p className="text-lg text-[#6b563a]">{greeting(new Date(now))}</p>
-        <h1 className="mt-1 text-2xl font-semibold leading-snug text-[#2c1e14]">{opening}</h1>
+      {/* Leads the page, above today's session. Every dementia product shows decline;
+          this ordering is the product statement that this one leads with what's preserved. */}
+      <PreservedPanel />
+
+      <MoodPrompt />
+
+      <DoctorVisitBanner onOpen={onOpenDoctorVisit} />
+
+      <section className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-6 sm:p-8">
+        <p className="text-lg text-[var(--ink-soft)]">{greeting(new Date(now))}</p>
+        <h1 className="mt-1 text-2xl font-semibold leading-snug text-[var(--ink)]">{opening}</h1>
         <StartSessionButton
           onHandOver={onStartSession}
-          className="mt-5 rounded-2xl bg-[var(--accent)] px-6 py-4 text-lg font-bold text-[var(--on-accent)] shadow-[0_4px_0_var(--accent-shadow)] transition hover:bg-[var(--accent-hover)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] active:translate-y-0.5"
+          className="mt-5 rounded-[6px] bg-[var(--accent)] px-6 py-4 text-lg font-bold text-[var(--on-accent)] shadow-[0_4px_0_var(--accent-shadow)] transition hover:bg-[var(--accent-hover)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] active:translate-y-0.5"
         />
       </section>
 
@@ -160,7 +174,7 @@ export function TodayScreen({
           title="Today"
           lead={todayLead}
           action={
-            <button onClick={() => setRemindersOpen(true)} className="rounded-lg px-2 py-1 text-sm font-medium text-[#6b563a] underline underline-offset-2 hover:bg-black/5">
+            <button onClick={() => setRemindersOpen(true)} className="rounded-[6px] px-2 py-1 text-sm font-medium text-[var(--ink-soft)] underline underline-offset-2 hover:bg-black/5">
               Reminders
             </button>
           }
@@ -168,14 +182,14 @@ export function TodayScreen({
           {lines.length > 0 && (
             <ul className="space-y-2">
               {lines.map((l, i) => (
-                <li key={i} className="flex gap-3 text-base text-[#2c1e14]">
+                <li key={i} className="flex gap-3 text-base text-[var(--ink)]">
                   <span aria-hidden className="w-4 shrink-0 text-center font-bold">
                     {l.mark}
                   </span>
                   <span>
                     {l.text}
-                    {l.word && <span className={l.showWord ? "text-[#6b563a]" : "sr-only"}> · {l.word}</span>}
-                    {l.sub && <span className="block text-[#6b563a]">{l.sub}</span>}
+                    {l.word && <span className={l.showWord ? "text-[var(--ink-soft)]" : "sr-only"}> · {l.word}</span>}
+                    {l.sub && <span className="block text-[var(--ink-soft)]">{l.sub}</span>}
                   </span>
                 </li>
               ))}
@@ -189,14 +203,14 @@ export function TodayScreen({
               <ul className="space-y-2">
                 {open.slice(0, 3).map((a) => (
                   <li key={a.id}>
-                    <button onClick={onOpenAlerts} className="w-full rounded-xl border border-[#e6d3ae] bg-[#fffdf8] px-3 py-2 text-left text-base text-[#2c1e14] hover:bg-[#fdf6e8]">
+                    <button onClick={onOpenAlerts} className="w-full rounded-[6px] border-2 border-[var(--parchment2)] bg-[#fffdf8] px-3 py-2 text-left text-base text-[var(--ink)] hover:bg-[var(--parchment)]">
                       {a.sentence}
                     </button>
                   </li>
                 ))}
               </ul>
               {open.length > 3 && (
-                <button onClick={onOpenAlerts} className="mt-2 rounded-lg px-2 py-1 text-sm font-medium text-[#6b563a] underline underline-offset-2 hover:bg-black/5">
+                <button onClick={onOpenAlerts} className="mt-2 rounded-[6px] px-2 py-1 text-sm font-medium text-[var(--ink-soft)] underline underline-offset-2 hover:bg-black/5">
                   See the rest in alerts
                 </button>
               )}
@@ -205,33 +219,17 @@ export function TodayScreen({
         </Card>
       </div>
 
-      <Card
-        title={`What ${w.subject === w.name ? cap(w.name) : w.subject} can still do`}
-        lead="Coming soon."
-        action={
-          <button disabled aria-disabled className="rounded-lg border border-[#e6d3ae] px-3 py-1 text-sm text-[#6b563a] opacity-60" title="Coming soon">
-            Share
-          </button>
-        }
-      >
-        <p className="text-base text-[#6b563a]">
-          The things {w.name} still does well, gathered from {w.possessive} own sessions — something to share with the family.
-        </p>
-      </Card>
-
-      <Card title="Things to talk about" lead="Coming soon.">
-        <p className="text-base text-[#6b563a]">Conversation starters from today's sessions — the places visited and the things named.</p>
-      </Card>
+      <TalkAboutPanel />
 
       <Card title="This week" lead={WEEK_LEAD[word].replace("{object}", w.object)}>
         <div className="flex flex-wrap items-center gap-4">
           {spark ? (
             <Sparkline values={spark} label={`This week, day by day: ${word}.`} />
           ) : (
-            <p className="text-base text-[#6b563a]">A pattern appears after two weeks.</p>
+            <p className="text-base text-[var(--ink-soft)]">A pattern appears after two weeks.</p>
           )}
-          {spark && <span className="text-lg font-semibold text-[#2c1e14]">{word}</span>}
-          <button onClick={onOpenProgress} className="ml-auto rounded-xl border-2 border-[#d9c49b] bg-white px-4 py-2 text-base font-semibold text-[#2c1e14] hover:bg-[#fdf6e8]">
+          {spark && <span className="text-lg font-semibold text-[var(--ink)]">{word}</span>}
+          <button onClick={onOpenProgress} className="ml-auto rounded-[6px] border-2 border-[var(--ink-soft)] bg-[var(--parchment)] px-4 py-2 text-base font-semibold text-[var(--ink)] hover:bg-[var(--parchment)]">
             See progress →
           </button>
         </div>
@@ -248,12 +246,12 @@ export function TodayScreen({
 
 function Card({ title, lead, action, children }: { title: string; lead: string; action?: ReactNode; children?: ReactNode }) {
   return (
-    <section className="rounded-2xl border border-[#e6d3ae] bg-white p-5 shadow-sm sm:p-6">
+    <section className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-5 sm:p-6">
       <div className="flex items-start justify-between gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-[#6b563a]">{title}</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--ink-soft)]">{title}</h2>
         {action}
       </div>
-      <p className="mt-1 text-lg text-[#2c1e14]">{lead}</p>
+      <p className="mt-1 text-lg text-[var(--ink)]">{lead}</p>
       {children && <div className="mt-3">{children}</div>}
     </section>
   );
@@ -269,8 +267,8 @@ function Sparkline({ values, label }: { values: (number | null)[]; label: string
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label}>
       <title>{label}</title>
-      <path d={d} fill="none" stroke="#2c1e14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      {values.map((v, i) => (v === null ? null : <circle key={i} cx={x(i)} cy={y(v)} r="2" fill="#2c1e14" />))}
+      <path d={d} fill="none" stroke="var(--ink)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {values.map((v, i) => (v === null ? null : <circle key={i} cx={x(i)} cy={y(v)} r="2" fill="var(--ink)" />))}
     </svg>
   );
 }

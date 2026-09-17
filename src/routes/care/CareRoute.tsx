@@ -6,7 +6,11 @@ import { SettingsPanel } from "../../components/caregiver/SettingsPanel";
 import { CommunityPackPanel } from "../../components/caregiver/CommunityPackPanel";
 import { PhotosPanel } from "../../components/caregiver/PhotosPanel";
 import { PeoplePanel } from "../../components/caregiver/PeoplePanel";
+import { VaultEngagementPanel } from "../../components/caregiver/VaultEngagementPanel";
+import { HandoverCard } from "../../components/caregiver/HandoverCard";
+import { DoctorVisitPanel } from "../../components/visit/DoctorVisitPanel";
 import { TrendsPanel } from "../../components/caregiver/TrendsPanel";
+import { RhythmPanel } from "../../components/caregiver/RhythmPanel";
 import { AlertsPanel } from "../../components/caregiver/AlertsPanel";
 import { RudasPanel } from "../../components/caregiver/RudasPanel";
 import { HowAreYouPanel } from "../../components/caregiver/HowAreYouPanel";
@@ -33,9 +37,12 @@ const SEGMENTS = {
     { id: "people", label: "People" },
     { id: "photos", label: "Photos" },
     { id: "album", label: "Album" },
+    { id: "engagement", label: "What Works" },
   ],
   progress: [
     { id: "trends", label: "Trends" },
+    { id: "rhythm", label: "Time of day" },
+    { id: "doctor-visit", label: "Doctor visit" },
     { id: "assessments", label: "Assessments" },
   ],
   setup: [
@@ -104,6 +111,7 @@ function Icon({ tab }: { tab: TabId }) {
 export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowHealthWorkerView }: CareRouteProps) {
   const [nav, setNav] = useState(readNav);
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [handoverOpen, setHandoverOpen] = useState(false);
   const { open } = useAlerts();
   const { active } = useProfile();
   const possessive = personWords(active.person).possessive;
@@ -137,24 +145,26 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
   const needsYou = open.length > 0;
 
   return (
-    <div ref={scroller} className="theme-care h-full w-full overflow-y-auto overflow-x-hidden bg-slate-50">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <div ref={scroller} className="theme-care h-full w-full overflow-y-auto overflow-x-hidden bg-[var(--parchment2)]">
+      <header className="sticky top-0 z-30 border-b-2 border-[var(--parchment2)] bg-[var(--parchment)]/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 sm:px-6">
-          <p className="flex shrink-0 items-center gap-2 text-base text-slate-700">
+          <p className="flex shrink-0 items-center gap-2 text-base text-[var(--ink)]">
             <span className="font-pixel text-sm">LOOM</span>
             <span aria-hidden>·</span>
             <span>Care Console</span>
           </p>
 
           <nav aria-label="Care console" className="order-3 hidden w-full lg:order-2 lg:block lg:w-auto sm:block">
-            <ul className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
+            <ul className="flex flex-wrap gap-1 rounded-[6px] bg-[var(--parchment2)] p-1">
               {TABS.map((t) => (
                 <li key={t.id}>
                   <button
                     onClick={() => goTab(t.id)}
                     aria-current={nav.tab === t.id ? "page" : undefined}
-                    className={`rounded-lg px-3 py-2 text-base font-medium transition focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] ${
-                      nav.tab === t.id ? "bg-white text-slate-900 shadow" : "text-slate-600 hover:text-slate-900"
+                    className={`rounded-[6px] border-2 px-3 py-2 text-base font-medium transition focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] ${
+                      nav.tab === t.id
+                        ? "border-[var(--ink-soft)] bg-[var(--parchment)] text-[var(--ink)]"
+                        : "border-transparent text-[var(--ink-soft)] hover:text-[var(--ink)]"
                     }`}
                   >
                     {t.label}
@@ -166,21 +176,27 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
 
           <div className="order-2 ml-auto flex flex-wrap items-center justify-end gap-2 lg:order-3">
             <button
+              onClick={() => setHandoverOpen(true)}
+              className="rounded-[6px] border-2 border-[var(--ink-soft)] bg-[var(--parchment)] px-3 py-2 text-base font-medium text-[var(--ink)] hover:bg-[var(--parchment2)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]"
+            >
+              Handover card
+            </button>
+            <button
               onClick={() => setAlertsOpen(true)}
               aria-haspopup="dialog"
-              // semantic colour, kept apart from the amber brand accent and always paired with the words
-              className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-base focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] ${
+              // semantic colour (terracotta / good), kept apart from the single gold accent and always paired with the words
+              className={`flex items-center gap-2 rounded-[6px] border-2 px-3 py-2 text-base transition hover:brightness-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] ${
                 needsYou
-                  ? "border-[#b4432f] bg-[#fbece7] font-semibold text-[#7a2716] hover:bg-[#f7ddd4]"
-                  : "border-[#9cc29a] bg-[#eaf4e8] text-[#2f5e30] hover:bg-[#dcecd9]"
+                  ? "border-[var(--terracotta)] bg-[var(--terracotta-soft)] font-semibold text-[var(--terracotta-ink)]"
+                  : "border-[var(--good)] bg-[var(--good-soft)] text-[var(--good-ink)]"
               }`}
             >
-              <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${needsYou ? "bg-[#b4432f]" : "bg-[#4f7d4f]"}`} />
+              <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${needsYou ? "bg-[var(--terracotta)]" : "bg-[var(--good)]"}`} />
               {needsYou ? "Needs you" : "Nothing needs you"}
             </button>
             <StartSessionButton
               onHandOver={onStartSession}
-              className="rounded-xl bg-[var(--accent)] px-4 py-2 text-base font-bold text-[var(--on-accent)] shadow-[0_3px_0_var(--accent-shadow)] transition hover:bg-[var(--accent-hover)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] active:translate-y-0.5"
+              className="rounded-[6px] bg-[var(--accent)] px-4 py-2 text-base font-bold text-[var(--on-accent)] shadow-[0_3px_0_var(--accent-shadow)] transition hover:bg-[var(--accent-hover)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] active:translate-y-0.5"
             />
           </div>
         </div>
@@ -188,7 +204,15 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
 
       <main key={nav.tab} className="animate-crossfade pb-28 sm:pb-6">
         {nav.tab === "today" && (
-          <TodayScreen onStartSession={onStartSession} onOpenAlerts={() => setAlertsOpen(true)} onOpenProgress={() => goTab("progress")} />
+          <TodayScreen
+            onStartSession={onStartSession}
+            onOpenAlerts={() => setAlertsOpen(true)}
+            onOpenProgress={() => goTab("progress")}
+            onOpenDoctorVisit={() => {
+              goTab("progress");
+              setSegment("progress", "doctor-visit");
+            }}
+          />
         )}
 
         {nav.tab === "world" && (
@@ -196,12 +220,23 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
             {segment("world") === "people" && <PeoplePanel />}
             {segment("world") === "photos" && <PhotosPanel />}
             {segment("world") === "album" && <AlbumPanel />}
+            {segment("world") === "engagement" && (
+              <VaultEngagementPanel
+                onAddPhotos={() => setSegment("world", "photos")}
+                onAddVoice={() => {
+                  goTab("setup");
+                  setSegment("setup", "preferences");
+                }}
+              />
+            )}
           </Segmented>
         )}
 
         {nav.tab === "progress" && (
           <Segmented tab="progress" value={segment("progress")} onChange={setSegment}>
             {segment("progress") === "trends" && <TrendsPanel />}
+            {segment("progress") === "rhythm" && <RhythmPanel />}
+            {segment("progress") === "doctor-visit" && <DoctorVisitPanel />}
             {segment("progress") === "assessments" && <RudasPanel />}
           </Segmented>
         )}
@@ -217,14 +252,14 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
         )}
       </main>
 
-      <footer className="border-t border-slate-200 bg-white pb-24 sm:pb-0">
+      <footer className="border-t-2 border-[var(--parchment2)] bg-[var(--parchment)] pb-24 sm:pb-0">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
           <div className="ml-auto flex flex-wrap gap-2">
-            <button onClick={onBackToPlay} className="rounded-lg px-3 py-2 text-sm text-slate-600 underline underline-offset-2 hover:bg-slate-100">
+            <button onClick={onBackToPlay} className="rounded-[6px] px-3 py-2 text-sm text-[var(--ink-soft)] underline underline-offset-2 hover:bg-[var(--parchment2)]">
               Back to the village
             </button>
             {onBackToTitle && (
-              <button onClick={onBackToTitle} className="rounded-lg px-3 py-2 text-sm text-slate-600 underline underline-offset-2 hover:bg-slate-100">
+              <button onClick={onBackToTitle} className="rounded-[6px] px-3 py-2 text-sm text-[var(--ink-soft)] underline underline-offset-2 hover:bg-[var(--parchment2)]">
                 Title screen
               </button>
             )}
@@ -233,7 +268,7 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
       </footer>
 
       {/* phones: the five tabs become a bottom bar */}
-      <nav aria-label="Care console" className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white sm:hidden">
+      <nav aria-label="Care console" className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-[var(--parchment2)] bg-[var(--parchment)] sm:hidden">
         <ul className="grid grid-cols-5">
           {TABS.map((t) => (
             <li key={t.id}>
@@ -241,10 +276,10 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
                 onClick={() => goTab(t.id)}
                 aria-current={nav.tab === t.id ? "page" : undefined}
                 className={`flex w-full flex-col items-center gap-0.5 px-1 pb-3 pt-2 text-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[var(--focus)] ${
-                  nav.tab === t.id ? "font-semibold text-slate-900" : "text-slate-500"
+                  nav.tab === t.id ? "font-semibold text-[var(--ink)]" : "text-[var(--ink-soft)]"
                 }`}
               >
-                <span className={`rounded-full px-3 py-0.5 ${nav.tab === t.id ? "bg-[var(--accent)] text-[var(--on-accent)]" : ""}`}>
+                <span className={`rounded-[6px] px-3 py-0.5 ${nav.tab === t.id ? "bg-[var(--accent)] text-[var(--on-accent)]" : ""}`}>
                   <Icon tab={t.id} />
                 </span>
                 {t.short}
@@ -259,6 +294,8 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
           <AlertsPanel />
         </Drawer>
       )}
+
+      {handoverOpen && <HandoverCard onClose={() => setHandoverOpen(false)} />}
     </div>
   );
 }
@@ -277,14 +314,14 @@ function Segmented({
   return (
     <>
       <div className="mx-auto max-w-5xl px-4 pt-6 sm:px-6">
-        <div role="group" aria-label="Section" className="inline-flex max-w-full flex-wrap gap-1 rounded-xl border border-slate-200 bg-white p-1">
+        <div role="group" aria-label="Section" className="inline-flex max-w-full flex-wrap gap-1 rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-1">
           {SEGMENTS[tab].map((s) => (
             <button
               key={s.id}
               onClick={() => onChange(tab, s.id)}
               aria-pressed={value === s.id}
-              className={`rounded-lg px-3 py-1.5 text-base font-medium focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] ${
-                value === s.id ? "bg-slate-800 text-white" : "text-slate-600 hover:bg-slate-100"
+              className={`rounded-[6px] px-3 py-1.5 text-base font-medium focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] ${
+                value === s.id ? "bg-[var(--ink)] text-[var(--parchment)]" : "text-[var(--ink-soft)] hover:bg-[var(--parchment2)]"
               }`}
             >
               {s.label}

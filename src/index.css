@@ -162,6 +162,44 @@ canvas.pixel-canvas {
   }
 }
 
+/* Handover card: same treatment as the referral summary — printing shows only the card. */
+@media print {
+  body.printing-handover > #root {
+    display: none !important;
+  }
+  body.printing-handover {
+    background: #fff !important;
+    overflow: visible !important;
+  }
+  body.printing-handover .handover-print-root {
+    position: static !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+}
+
+/* Doctor visit report: same treatment again — printing shows only the report. */
+@media print {
+  body.printing-visit-report > #root {
+    display: none !important;
+  }
+  body.printing-visit-report {
+    background: #fff !important;
+    overflow: visible !important;
+  }
+  body.printing-visit-report .visit-report-print-root {
+    position: static !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body.printing-visit-report .visit-report-print-root > div:last-child,
+  body.printing-visit-report .visit-report-print-root > div:last-child > div {
+    padding: 0 !important;
+    box-shadow: none !important;
+    max-width: none !important;
+  }
+}
+
 /* Console accents. Caregiver: warm gold. Health worker: indigo — deliberately unlike
    the caregiver console and unlike every triage colour. */
 :root,
@@ -178,14 +216,24 @@ canvas.pixel-canvas {
   --accent-shadow: #29366e;
   --on-accent: #ffffff;
   --focus: #29366e;
+
+  /* the health-worker console's own established neutrals (unchanged) — given here too,
+     because a few pieces shared with the caregiver console (src/components/shared/ui.tsx)
+     read --parchment/--ink instead of hardcoding a colour. This keeps /asha exactly as it
+     was: the palette pass below is scoped to .theme-care and never reaches this console. */
+  --parchment: #ffffff;
+  --parchment2: #d8dcec;
+  --ink: #1d2340;
+  --ink-hover: #141a30;
+  --ink-soft: #4a5170;
 }
 
 /*
  * THE CAREGIVER PALETTE — the game's own colours, so the console and the village read as
- * one product. Defined at :root so shared pieces (charts, the referral export) pick them
- * up wherever they render.
+ * one product. Scoped to .theme-care (never .theme-asha, which keeps its own palette above)
+ * so this pass never touches the health-worker console.
  */
-:root {
+.theme-care {
   --parchment: #f7efdc;
   --parchment2: #e8dcc0;
   --ink: #2e2318;
@@ -202,8 +250,13 @@ canvas.pixel-canvas {
   --watch-ink: #7a431e;
   --terracotta-soft: #f7e4dc;
   --terracotta-ink: #7a2716;
+}
 
-  /* the five cognitive domains as five threads — one fixed colour each, everywhere they appear */
+/* The five cognitive domains as five threads — one fixed colour each, identical wherever a
+   domain is drawn. Global (not theme-scoped): the health-worker console shows the same
+   person's same domains and must use the very same thread colours as the caregiver console.
+   DomainCharts.tsx itself uses literal hex, not these — they exist for any class-based CSS. */
+:root {
   --thread-memory: #c25a2e;
   --thread-attention: #6b8e4e;
   --thread-speed: #4e7ea3;

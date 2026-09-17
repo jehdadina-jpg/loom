@@ -8,11 +8,13 @@ import { referralText, type ReferralData } from "../../game/referral/referral";
 export function referralHtmlDocument(data: ReferralData): string {
   const body = renderToStaticMarkup(<ReferralSummary data={data} />);
   const title = `LOOM summary — ${data.person.fullName}`;
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title.replace(/</g, "&lt;")}</title><style>body{margin:0;background:#f4efe6}${REFERRAL_CSS}</style></head><body>${body}</body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title.replace(/</g, "&lt;")}</title><style>body{margin:0;background:#e8dcc0}${REFERRAL_CSS}</style></head><body>${body}</body></html>`;
 }
 
+// theme-neutral (parchment/ink) rather than the active console's accent — this overlay is a
+// shared document viewer, not console chrome, so it looks the same whichever console opened it
 const btn =
-  "rounded-xl border-2 border-[#d9c49b] bg-white px-4 py-2 text-base font-semibold text-[#2c1e14] hover:bg-[#fdf6e8] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6d4a34]";
+  "rounded-[6px] border-2 border-[var(--ink-soft)] bg-[var(--parchment)] px-4 py-2 text-base font-semibold text-[var(--ink)] hover:bg-[var(--parchment2)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]";
 
 /**
  * Full-screen preview with Print, Copy as text and Save as a file. Printing hides the app
@@ -54,11 +56,11 @@ export function ReferralView({ data, onClose, onShared }: { data: ReferralData; 
   }
 
   return createPortal(
-    <div className="referral-print-root fixed inset-0 z-[80] overflow-y-auto bg-[#f4efe6]" role="dialog" aria-modal="true" aria-label="Referral summary">
+    <div className="referral-print-root fixed inset-0 z-[80] overflow-y-auto bg-[var(--parchment2)]" role="dialog" aria-modal="true" aria-label="Referral summary">
       <style>{REFERRAL_CSS}</style>
-      <div className="no-print sticky top-0 z-10 border-b border-[#e6d3ae] bg-[#fdf6e8]/95 backdrop-blur">
+      <div className="no-print sticky top-0 z-10 border-b-2 border-[var(--ink-soft)] bg-[var(--parchment)]/95 backdrop-blur">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-2 px-4 py-3">
-          <p className="mr-auto text-base text-[#2c1e14]">Share this with a doctor. They won't need to install anything.</p>
+          <p className="mr-auto text-base text-[var(--ink)]">Share this with a doctor. They won't need to install anything.</p>
           <button
             onClick={() => {
               window.print();
@@ -79,13 +81,13 @@ export function ReferralView({ data, onClose, onShared }: { data: ReferralData; 
           </button>
         </div>
         {note && (
-          <p className="mx-auto max-w-3xl px-4 pb-3 text-base text-[#2c1e14]" role="status">
+          <p className="mx-auto max-w-3xl px-4 pb-3 text-base text-[var(--ink)]" role="status">
             {note}
           </p>
         )}
       </div>
       <div className="px-2 py-4 sm:py-8">
-        <div className="mx-auto max-w-3xl rounded-xl shadow-lg">
+        <div className="mx-auto max-w-3xl rounded-[6px] border-2 border-[var(--ink-soft)]">
           <ReferralSummary data={data} />
         </div>
       </div>

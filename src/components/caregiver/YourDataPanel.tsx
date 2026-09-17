@@ -126,14 +126,14 @@ export function YourDataPanel({ onShowHealthWorkerView }: { onShowHealthWorkerVi
       <div className="grid gap-4 md:grid-cols-2">
         <Section title="Sync" lead={syncLead}>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-base">
-            <dt className="text-[#6b563a]">Waiting to upload</dt>
-            <dd className="text-[#2c1e14]" aria-live="polite">{sync.pending}</dd>
-            <dt className="text-[#6b563a]">Last successful sync</dt>
-            <dd className="text-[#2c1e14]">{ago(sync.lastSuccessAt)}</dd>
-            <dt className="text-[#6b563a]">Connection</dt>
-            <dd className="text-[#2c1e14]">{sync.online ? "Online" : "Offline"}</dd>
+            <dt className="text-[var(--ink-soft)]">Waiting to upload</dt>
+            <dd className="text-[var(--ink)]" aria-live="polite">{sync.pending}</dd>
+            <dt className="text-[var(--ink-soft)]">Last successful sync</dt>
+            <dd className="text-[var(--ink)]">{ago(sync.lastSuccessAt)}</dd>
+            <dt className="text-[var(--ink-soft)]">Connection</dt>
+            <dd className="text-[var(--ink)]">{sync.online ? "Online" : "Offline"}</dd>
           </dl>
-          {sync.lastProblem && sync.pending > 0 && <p className="mt-2 text-base text-[#6b563a]">{sync.lastProblem}</p>}
+          {sync.lastProblem && sync.pending > 0 && <p className="mt-2 text-base text-[var(--ink-soft)]">{sync.lastProblem}</p>}
           <button onClick={() => void flushQueue()} disabled={!sync.online || sync.pending === 0} className={`${secondaryBtn} mt-4`}>
             Sync now
           </button>
@@ -143,19 +143,19 @@ export function YourDataPanel({ onShowHealthWorkerView }: { onShowHealthWorkerVi
           <button onClick={exportEverything} className={primaryBtn}>
             Export everything
           </button>
-          {exported && <p className="mt-2 text-base text-[#2c1e14]" role="status">Saved to your downloads.</p>}
+          {exported && <p className="mt-2 text-base text-[var(--ink)]" role="status">Saved to your downloads.</p>}
         </Section>
       </div>
 
       <div className="mt-4">
         <Section title="What is collected" lead="In plain words: what LOOM keeps, where it lives, and who can see it.">
-          <ul className="divide-y divide-[#efe3cb]">
+          <ul className="divide-y divide-[var(--parchment2)]">
             {COLLECTED.map((c) => (
-              <li key={c.what} className="py-3 text-base text-[#2c1e14]">
+              <li key={c.what} className="py-3 text-base text-[var(--ink)]">
                 <p className="font-semibold">{c.what}</p>
-                <p className="text-[#6b563a]">{c.examples}</p>
-                <p><span className="text-[#6b563a]">Stored: </span>{c.where}</p>
-                <p><span className="text-[#6b563a]">Seen by: </span>{c.who}</p>
+                <p className="text-[var(--ink-soft)]">{c.examples}</p>
+                <p><span className="text-[var(--ink-soft)]">Stored: </span>{c.where}</p>
+                <p><span className="text-[var(--ink-soft)]">Seen by: </span>{c.who}</p>
               </li>
             ))}
           </ul>
@@ -172,12 +172,12 @@ export function YourDataPanel({ onShowHealthWorkerView }: { onShowHealthWorkerVi
               Delete everything…
             </button>
           ) : (
-            <div className="rounded-xl border-2 border-[#2c1e14] bg-[#fdf6e8] p-4">
-              <p className="text-base text-[#2c1e14]">
+            <div className="rounded-[6px] border-2 border-[var(--ink)] bg-[var(--parchment)] p-4">
+              <p className="text-base text-[var(--ink)]">
                 This removes sessions, the activity record, RUDAS results, reminders, alerts, check-ins, settings, family photos,
                 the voice note and album moments for {who}. It can't be undone. You may want to export everything first.
               </p>
-              <label className="mt-3 block text-base text-[#2c1e14]">
+              <label className="mt-3 block text-base text-[var(--ink)]">
                 Type <strong>delete</strong> to confirm
                 <input value={typed} onChange={(e) => setTyped(e.target.value)} className={`${field} mt-2`} autoComplete="off" />
               </label>

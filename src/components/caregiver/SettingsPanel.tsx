@@ -14,22 +14,22 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4">
+    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-4">
       <span>
-        <span className="block font-medium text-slate-800">{label}</span>
-        <span className="block text-sm text-slate-500">{hint}</span>
+        <span className="block font-medium text-[var(--ink)]">{label}</span>
+        <span className="block text-sm text-[var(--ink-soft)]">{hint}</span>
       </span>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative mt-1 h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 ${
-          checked ? "bg-emerald-600" : "bg-slate-300"
+        className={`relative mt-1 h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] ${
+          checked ? "bg-[var(--good)]" : "bg-[var(--parchment2)]"
         }`}
       >
         <span
-          className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-6" : "left-1"}`}
+          className={`absolute top-1 h-5 w-5 rounded-full bg-[var(--parchment)] shadow-[0_1px_0_var(--ink-soft)] transition-all ${checked ? "left-6" : "left-1"}`}
         />
       </button>
     </label>
@@ -83,17 +83,17 @@ export function SettingsPanel() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800">Setup</h1>
-        <p className="text-slate-500">Adjust how the village looks, sounds and guides — changes apply immediately.</p>
+        <h1 className="text-3xl font-bold text-[var(--ink)]">Setup</h1>
+        <p className="text-[var(--ink-soft)]">Adjust how the village looks, sounds and guides — changes apply immediately.</p>
       </header>
 
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-slate-800">Reading &amp; comfort</h2>
-        <p className="mb-3 text-slate-600">How large and how clear everything looks and sounds on the patient side.</p>
+        <h2 className="text-lg font-semibold text-[var(--ink)]">Reading &amp; comfort</h2>
+        <p className="mb-3 text-[var(--ink-soft)]">How large and how clear everything looks and sounds on the patient side.</p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <span className="block font-medium text-slate-800">Text size</span>
-            <span className="mb-3 block text-sm text-slate-500">Larger text throughout the game</span>
+          <div className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-4">
+            <span className="block font-medium text-[var(--ink)]">Text size</span>
+            <span className="mb-3 block text-sm text-[var(--ink-soft)]">Larger text throughout the game</span>
             <div className="flex gap-2">
               {[
                 { label: "Regular", value: 1 },
@@ -103,10 +103,10 @@ export function SettingsPanel() {
                 <button
                   key={opt.label}
                   onClick={() => update({ textScale: opt.value })}
-                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                  className={`flex-1 rounded-[6px] border-2 px-3 py-2 text-sm font-medium transition ${
                     settings.textScale === opt.value
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                      ? "border-[var(--accent-shadow)] bg-[#f6e3b8] text-[var(--ink)]"
+                      : "border-[var(--parchment2)] text-[var(--ink-soft)] hover:bg-[var(--parchment2)]"
                   }`}
                 >
                   {opt.label}
@@ -136,12 +136,12 @@ export function SettingsPanel() {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-slate-800">The village clock &amp; weather</h2>
-        <p className="mb-3 text-slate-600">What time of day and what weather the village shows.</p>
+        <h2 className="text-lg font-semibold text-[var(--ink)]">The village clock &amp; weather</h2>
+        <p className="mb-3 text-[var(--ink-soft)]">What time of day and what weather the village shows.</p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <span className="block font-medium text-slate-800">Time of day</span>
-            <span className="mb-3 block text-sm text-slate-500">
+          <div className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-4">
+            <span className="block font-medium text-[var(--ink)]">Time of day</span>
+            <span className="mb-3 block text-sm text-[var(--ink-soft)]">
               The whole village shares one sky — sunrise, midday, golden hour, night.
             </span>
             <div className="grid grid-cols-2 gap-2">
@@ -154,21 +154,21 @@ export function SettingsPanel() {
                 <button
                   key={opt.value}
                   onClick={() => update({ timeMode: opt.value })}
-                  className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                  className={`rounded-[6px] border-2 px-3 py-2 text-left text-sm transition ${
                     settings.timeMode === opt.value
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                      ? "border-[var(--accent-shadow)] bg-[#f6e3b8] text-[var(--ink)]"
+                      : "border-[var(--parchment2)] text-[var(--ink-soft)] hover:bg-[var(--parchment2)]"
                   }`}
                 >
                   <span className="block font-medium">{opt.label}</span>
-                  <span className="block text-sm text-slate-500">{opt.hint}</span>
+                  <span className="block text-sm text-[var(--ink-soft)]">{opt.hint}</span>
                 </button>
               ))}
             </div>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <span className="block font-medium text-slate-800">Weather</span>
-            <span className="mb-3 block text-sm text-slate-500">Rain and mist are gentle and silent — no thunder.</span>
+          <div className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-4">
+            <span className="block font-medium text-[var(--ink)]">Weather</span>
+            <span className="mb-3 block text-sm text-[var(--ink-soft)]">Rain and mist are gentle and silent — no thunder.</span>
             <div className="flex gap-2">
               {[
                 { label: "Clear", value: "clear" as const },
@@ -178,10 +178,10 @@ export function SettingsPanel() {
                 <button
                   key={opt.value}
                   onClick={() => update({ weather: opt.value })}
-                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                  className={`flex-1 rounded-[6px] border-2 px-3 py-2 text-sm font-medium transition ${
                     settings.weather === opt.value
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                      ? "border-[var(--accent-shadow)] bg-[#f6e3b8] text-[var(--ink)]"
+                      : "border-[var(--parchment2)] text-[var(--ink-soft)] hover:bg-[var(--parchment2)]"
                   }`}
                 >
                   {opt.label}
@@ -193,8 +193,8 @@ export function SettingsPanel() {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-slate-800">Guidance</h2>
-        <p className="mb-3 text-slate-600">How much the app helps along the way, and whether it adapts on its own.</p>
+        <h2 className="text-lg font-semibold text-[var(--ink)]">Guidance</h2>
+        <p className="mb-3 text-[var(--ink-soft)]">How much the app helps along the way, and whether it adapts on its own.</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <Toggle
             label="Guided session"
@@ -214,14 +214,14 @@ export function SettingsPanel() {
             checked={settings.adaptiveDifficulty}
             onChange={(v) => update({ adaptiveDifficulty: v })}
           />
-          <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4">
+          <div className="flex items-center justify-between gap-4 rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-4">
             <span>
-              <span className="block font-medium text-slate-800">Start the visit again</span>
-              <span className="block text-sm text-slate-500">Returns the guide to its first suggestion</span>
+              <span className="block font-medium text-[var(--ink)]">Start the visit again</span>
+              <span className="block text-sm text-[var(--ink-soft)]">Returns the guide to its first suggestion</span>
             </span>
             <button
               onClick={restartGuide}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              className="rounded-[6px] border-2 border-[var(--parchment2)] px-3 py-2 text-sm font-medium text-[var(--ink-soft)] hover:bg-[var(--parchment2)]"
             >
               Restart
             </button>
@@ -230,24 +230,24 @@ export function SettingsPanel() {
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-1 text-lg font-semibold text-slate-800">Family voice note</h2>
-        <p className="mb-3 text-sm text-slate-500">
+        <h2 className="mb-1 text-lg font-semibold text-[var(--ink)]">Family voice note</h2>
+        <p className="mb-3 text-sm text-[var(--ink-soft)]">
           Record a short message from someone they love. It appears only at the water point, as something to listen to —
           never as a task. Up to 30 seconds, stored on this device.
         </p>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-4">
           <div className="flex flex-wrap items-center gap-3">
             {!recording ? (
               <button
                 onClick={startRecording}
-                className="rounded-lg bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
+                className="rounded-[6px] bg-[var(--terracotta)] px-4 py-2 font-medium text-[var(--parchment)] hover:brightness-90"
               >
                 Record a message
               </button>
             ) : (
               <button
                 onClick={stopRecording}
-                className="rounded-lg bg-slate-800 px-4 py-2 font-medium text-white hover:bg-slate-700"
+                className="rounded-[6px] bg-[var(--ink)] px-4 py-2 font-medium text-[var(--parchment)] hover:bg-[var(--ink-hover)]"
               >
                 Stop recording
               </button>
@@ -257,7 +257,7 @@ export function SettingsPanel() {
                 <audio controls src={settings.familyVoiceUrl} className="h-10" />
                 <button
                   onClick={() => update({ familyVoiceUrl: null, familyVoiceLabel: null })}
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                  className="rounded-[6px] border-2 border-[var(--parchment2)] px-3 py-2 text-sm text-[var(--ink-soft)] hover:bg-[var(--parchment2)]"
                 >
                   Remove
                 </button>
@@ -266,26 +266,26 @@ export function SettingsPanel() {
           </div>
           {settings.familyVoiceUrl && (
             <label className="mt-4 block">
-              <span className="block text-sm text-slate-600">Label shown in the game</span>
+              <span className="block text-sm text-[var(--ink-soft)]">Label shown in the game</span>
               <input
                 value={settings.familyVoiceLabel ?? ""}
                 onChange={(e) => update({ familyVoiceLabel: e.target.value })}
                 placeholder="e.g. Bimal's message"
-                className="mt-1 w-full max-w-sm rounded-lg border border-slate-200 px-3 py-2 text-slate-800 focus:border-emerald-500 focus:outline-none"
+                className="mt-1 w-full max-w-sm rounded-[6px] border-2 border-[var(--parchment2)] px-3 py-2 text-[var(--ink)] focus:border-[var(--accent-shadow)] focus:outline-none"
               />
             </label>
           )}
-          {recording && <p className="mt-3 text-sm text-rose-600">Recording… speak now, then press stop.</p>}
-          {recError && <p className="mt-3 text-sm text-rose-600">{recError}</p>}
+          {recording && <p className="mt-3 text-sm text-[var(--terracotta)]">Recording… speak now, then press stop.</p>}
+          {recError && <p className="mt-3 text-sm text-[var(--terracotta)]">{recError}</p>}
           {!settings.familyVoiceUrl && !recording && (
-            <p className="mt-3 text-sm text-slate-500">
+            <p className="mt-3 text-sm text-[var(--ink-soft)]">
               No voice note yet — the option stays hidden in the game until one is recorded.
             </p>
           )}
         </div>
       </section>
 
-      <button onClick={reset} className="text-sm text-slate-500 underline underline-offset-2 hover:text-slate-700">
+      <button onClick={reset} className="text-sm text-[var(--ink-soft)] underline underline-offset-2 hover:text-[var(--ink)]">
         Reset all settings to defaults
       </button>
     </div>
