@@ -10,7 +10,7 @@ export type TelemetryEvent =
   | { type: "session_end"; sessionId: string; timestamp: number }
   | { type: "navigate"; to: string; misses: number; elapsedMs: number; timestamp: number }
   | { type: "dialogue"; npcId: string; locationId: string; timestamp: number }
-  | { type: "comfort"; locationId: string; contentType: string; timestamp: number }
+  | { type: "comfort"; locationId: string; contentType: string; itemId: string; dwellMs: number; timestamp: number }
   | { type: "activity_start"; activityId: string; domain: string; timestamp: number }
   | { type: "activity_attempt"; activityId: string; correct: boolean; cueLevel: number; timestamp: number }
   | {

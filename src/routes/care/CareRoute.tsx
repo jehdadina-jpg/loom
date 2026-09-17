@@ -6,6 +6,7 @@ import { SettingsPanel } from "../../components/caregiver/SettingsPanel";
 import { CommunityPackPanel } from "../../components/caregiver/CommunityPackPanel";
 import { PhotosPanel } from "../../components/caregiver/PhotosPanel";
 import { PeoplePanel } from "../../components/caregiver/PeoplePanel";
+import { VaultEngagementPanel } from "../../components/caregiver/VaultEngagementPanel";
 import { TrendsPanel } from "../../components/caregiver/TrendsPanel";
 import { RhythmPanel } from "../../components/caregiver/RhythmPanel";
 import { AlertsPanel } from "../../components/caregiver/AlertsPanel";
@@ -34,6 +35,7 @@ const SEGMENTS = {
     { id: "people", label: "People" },
     { id: "photos", label: "Photos" },
     { id: "album", label: "Album" },
+    { id: "engagement", label: "What Works" },
   ],
   progress: [
     { id: "trends", label: "Trends" },
@@ -200,6 +202,15 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
             {segment("world") === "people" && <PeoplePanel />}
             {segment("world") === "photos" && <PhotosPanel />}
             {segment("world") === "album" && <AlbumPanel />}
+            {segment("world") === "engagement" && (
+              <VaultEngagementPanel
+                onAddPhotos={() => setSegment("world", "photos")}
+                onAddVoice={() => {
+                  goTab("setup");
+                  setSegment("setup", "preferences");
+                }}
+              />
+            )}
           </Segmented>
         )}
 
