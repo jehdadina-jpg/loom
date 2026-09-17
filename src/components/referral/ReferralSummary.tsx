@@ -7,19 +7,19 @@ import { DomainCharts } from "../charts/DomainCharts";
 import { observation, REFERRAL_FOOTER, usingFor, type ReferralData } from "../../game/referral/referral";
 
 export const REFERRAL_CSS = `
-.loom-referral { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: #2c1e14; background: #fff; max-width: 760px; margin: 0 auto; padding: 28px 32px; line-height: 1.4; }
+.loom-referral { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: #2e2318; background: #f7efdc; max-width: 760px; margin: 0 auto; padding: 28px 32px; line-height: 1.4; }
 .loom-referral h1 { font-size: 22px; margin: 0; }
-.loom-referral h2 { font-size: 16px; margin: 18px 0 6px; border-bottom: 1px solid #e6d3ae; padding-bottom: 2px; }
+.loom-referral h2 { font-size: 16px; margin: 18px 0 6px; border-bottom: 1px solid #e8dcc0; padding-bottom: 2px; }
 .loom-referral p, .loom-referral li, .loom-referral td, .loom-referral th { font-size: 14px; }
 .loom-referral .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
-.loom-referral .meta div { border: 1px solid #e6d3ae; border-radius: 8px; padding: 6px 10px; }
-.loom-referral .meta span { display: block; font-size: 14px; color: #6b563a; }
+.loom-referral .meta div { border: 1px solid #e8dcc0; border-radius: 6px; padding: 6px 10px; }
+.loom-referral .meta span { display: block; font-size: 14px; color: #6b5d4a; }
 .loom-referral .meta strong { font-size: 16px; }
-.loom-referral .observation { font-size: 16px; border-left: 4px solid #2c1e14; padding: 6px 12px; margin: 0; background: #fbf5e9; }
+.loom-referral .observation { font-size: 16px; border-left: 4px solid #f2b233; padding: 6px 12px; margin: 0; background: #e8dcc0; border-radius: 0 6px 6px 0; }
 .loom-referral table { border-collapse: collapse; width: 100%; }
-.loom-referral td, .loom-referral th { text-align: left; padding: 3px 8px 3px 0; border-bottom: 1px solid #efe3cb; }
+.loom-referral td, .loom-referral th { text-align: left; padding: 3px 8px 3px 0; border-bottom: 1px solid #e8dcc0; }
 .loom-referral .notes { white-space: pre-wrap; margin: 0; }
-.loom-referral footer { margin-top: 18px; border-top: 2px solid #2c1e14; padding-top: 8px; font-size: 15px; font-weight: 600; }
+.loom-referral footer { margin-top: 18px; border-top: 2px solid #2e2318; padding-top: 8px; font-size: 15px; font-weight: 600; }
 @media print {
   @page { size: A4; margin: 12mm; }
   .loom-referral { padding: 0; max-width: none; }
@@ -35,7 +35,7 @@ export function ReferralSummary({ data }: { data: ReferralData }) {
     <article className="loom-referral">
       <header>
         <h1>Summary for a clinical conversation</h1>
-        <p style={{ margin: "2px 0 0", color: "#6b563a" }}>Prepared with LOOM on {longDate(data.generatedAt)}</p>
+        <p style={{ margin: "2px 0 0", color: "#6b5d4a" }}>Prepared with LOOM on {longDate(data.generatedAt)}</p>
         <div className="meta">
           <div>
             <span>Name</span>

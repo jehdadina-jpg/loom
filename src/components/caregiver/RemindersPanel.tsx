@@ -17,11 +17,11 @@ import {
   type ReminderLogEntry,
 } from "../../game/reminders/model";
 
-const card = "rounded-2xl border border-[#e6d3ae] bg-white p-5 shadow-sm sm:p-6";
+const card = "rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-5  sm:p-6";
 const primaryBtn =
-  "rounded-2xl bg-[#e0a835] px-5 py-3 text-base font-bold text-[#2c1e14] shadow-[0_3px_0_#b8791f] transition hover:bg-[#e8b54a] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6d4a34] active:translate-y-0.5";
+  "rounded-[6px] bg-[var(--accent)] px-5 py-3 text-base font-bold text-[var(--ink)] shadow-[0_3px_0_var(--accent-shadow)] transition hover:bg-[#e8b54a] focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] active:translate-y-0.5";
 const quietBtn =
-  "rounded-xl px-3 py-2 text-sm font-medium text-[#6b563a] underline underline-offset-2 hover:bg-black/5 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6d4a34]";
+  "rounded-[6px] px-3 py-2 text-sm font-medium text-[var(--ink-soft)] underline underline-offset-2 hover:bg-black/5 focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]";
 
 function todays(reminders: Reminder[], log: ReminderLogEntry[], now: number) {
   const day = new Date(now);
@@ -54,8 +54,8 @@ export function RemindersPanel() {
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#2c1e14]">Reminders</h1>
-          <p className="mt-1 text-lg text-[#2c1e14]">{leadSentence(reminders, log, now)}</p>
+          <h1 className="text-3xl font-bold text-[var(--ink)]">Reminders</h1>
+          <p className="mt-1 text-lg text-[var(--ink)]">{leadSentence(reminders, log, now)}</p>
         </div>
         <button onClick={() => setEditing("new")} className={primaryBtn}>
           Add a reminder
@@ -63,17 +63,17 @@ export function RemindersPanel() {
       </header>
 
       <NotificationLine status={notifications} onEnable={requestNotifications} />
-      {storageError && <p className="mb-4 text-base text-[#6b563a]">{storageError}</p>}
+      {storageError && <p className="mb-4 text-base text-[var(--ink-soft)]">{storageError}</p>}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {CATEGORIES.map((c) => {
           const inCategory = reminders.filter((r) => r.category === c.id);
           return (
             <section key={c.id} className={card}>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-[#6b563a]">{c.label}</h2>
-              <p className="mt-1 text-lg text-[#2c1e14]">{leadSentence(inCategory, log, now)}</p>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--ink-soft)]">{c.label}</h2>
+              <p className="mt-1 text-lg text-[var(--ink)]">{leadSentence(inCategory, log, now)}</p>
               {inCategory.length > 0 && (
-                <ul className="mt-3 divide-y divide-[#efe3cb]">
+                <ul className="mt-3 divide-y divide-[var(--parchment2)]">
                   {inCategory.map((r) => (
                     <ReminderRow key={r.id} reminder={r} onEdit={() => setEditing(r)} />
                   ))}
@@ -101,8 +101,8 @@ function NotificationLine({ status, onEnable }: { status: string; onEnable: () =
           ? "This browser can't show notifications, so no-response alerts only show on this page."
           : "Turn on notifications so this device hears about reminders that get no response.";
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-[#e6d3ae] bg-[#fdf6e8] px-5 py-3">
-      <p className="flex-1 text-base text-[#2c1e14]">{text}</p>
+    <div className="mb-6 flex flex-wrap items-center gap-3 rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] px-5 py-3">
+      <p className="flex-1 text-base text-[var(--ink)]">{text}</p>
       {status === "default" && (
         <button onClick={onEnable} className={primaryBtn}>
           Turn on notifications
@@ -117,7 +117,7 @@ const STATE_STYLE: Record<OccurrenceState, { mark: string; word: string; cls: st
   due: { mark: "⋯", word: "due", cls: "bg-[#e2eef3] text-[#2c4f5e]" },
   // neutral on purpose: no red, no exclamation
   missed: { mark: "●", word: "missed", cls: "bg-[#efebe4] text-[#5f574c]" },
-  upcoming: { mark: "", word: "", cls: "bg-transparent text-[#6b563a]" },
+  upcoming: { mark: "", word: "", cls: "bg-transparent text-[var(--ink-soft)]" },
 };
 
 function ReminderRow({ reminder, onEdit }: { reminder: Reminder; onEdit: () => void }) {
@@ -128,17 +128,17 @@ function ReminderRow({ reminder, onEdit }: { reminder: Reminder; onEdit: () => v
   return (
     <li className="flex gap-3 py-4">
       {reminder.photo && (
-        <img src={reminder.photo} alt="" className="h-14 w-14 shrink-0 rounded-xl border border-[#e6d3ae] object-cover" />
+        <img src={reminder.photo} alt="" className="h-14 w-14 shrink-0 rounded-[6px] border-2 border-[var(--parchment2)] object-cover" />
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-lg font-semibold text-[#2c1e14]">{reminder.label}</p>
+          <p className="text-lg font-semibold text-[var(--ink)]">{reminder.label}</p>
           <button onClick={onEdit} className={quietBtn}>
             Edit
           </button>
         </div>
-        <p className="text-base text-[#6b563a]">{describeSchedule(reminder.schedule)}</p>
-        <p className="text-base text-[#6b563a]">Next: {describeNext(next, new Date(now))}</p>
+        <p className="text-base text-[var(--ink-soft)]">{describeSchedule(reminder.schedule)}</p>
+        <p className="text-base text-[var(--ink-soft)]">Next: {describeNext(next, new Date(now))}</p>
         {today.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-2" aria-label="Today">
             {today.map((o) => (
@@ -176,7 +176,7 @@ function OccurrenceChip({
       {(state === "due" || state === "missed") && (
         <button
           onClick={() => onMarkDone(occurrence, "caregiver")}
-          className="rounded-full bg-white/80 px-2 py-0.5 text-sm font-medium underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6d4a34]"
+          className="rounded-full bg-[var(--parchment)]/80 px-2 py-0.5 text-sm font-medium underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
         >
           Mark done
         </button>
@@ -252,10 +252,10 @@ function ReminderForm({ initial, onClose }: { initial: Reminder | null; onClose:
     onClose();
   }
 
-  const field = "mt-2 w-full rounded-xl border-2 border-[#d9c49b] bg-white px-3 py-2.5 text-base text-[#2c1e14] focus:border-[#b8791f] focus:outline-none";
+  const field = "mt-2 w-full rounded-[6px] border-2 border-[var(--ink-soft)] bg-[var(--parchment)] px-3 py-2.5 text-base text-[var(--ink)] focus:border-[var(--accent-shadow)] focus:outline-none";
   const toggle = (on: boolean) =>
-    `rounded-xl border-2 px-3 py-2 text-base font-medium transition focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6d4a34] ${
-      on ? "border-[#b8791f] bg-[#f6e3b8] text-[#2c1e14]" : "border-[#e6d3ae] bg-white text-[#6b563a]"
+    `rounded-[6px] border-2 px-3 py-2 text-base font-medium transition focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] ${
+      on ? "border-[var(--accent-shadow)] bg-[#f6e3b8] text-[var(--ink)]" : "border-[var(--parchment2)] bg-[var(--parchment)] text-[var(--ink-soft)]"
     }`;
 
   return (
@@ -265,14 +265,14 @@ function ReminderForm({ initial, onClose }: { initial: Reminder | null; onClose:
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-[#fdf6e8] p-6 shadow-2xl sm:rounded-3xl"
+        className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-[6px] border-t-4 border-[var(--ink-soft)] bg-[var(--parchment)] p-6 sm:rounded-[6px] sm:border-t-0 sm:border-2"
       >
-        <h2 id={titleId} className="text-xl font-bold text-[#2c1e14]">
+        <h2 id={titleId} className="text-xl font-bold text-[var(--ink)]">
           {initial ? "Edit reminder" : "Add a reminder"}
         </h2>
 
         <fieldset className="mt-5">
-          <legend className="text-base font-medium text-[#2c1e14]">What kind</legend>
+          <legend className="text-base font-medium text-[var(--ink)]">What kind</legend>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {CATEGORIES.map((c) => (
               <button key={c.id} type="button" aria-pressed={category === c.id} onClick={() => pickCategory(c.id)} className={toggle(category === c.id)}>
@@ -282,7 +282,7 @@ function ReminderForm({ initial, onClose }: { initial: Reminder | null; onClose:
           </div>
         </fieldset>
 
-        <label htmlFor={labelId} className="mt-5 block text-base font-medium text-[#2c1e14]">
+        <label htmlFor={labelId} className="mt-5 block text-base font-medium text-[var(--ink)]">
           Label, in your own words
         </label>
         <input
@@ -295,7 +295,7 @@ function ReminderForm({ initial, onClose }: { initial: Reminder | null; onClose:
         />
 
         <fieldset className="mt-5">
-          <legend className="text-base font-medium text-[#2c1e14]">When</legend>
+          <legend className="text-base font-medium text-[var(--ink)]">When</legend>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <button type="button" aria-pressed={kind === "daily"} onClick={() => setKind("daily")} className={toggle(kind === "daily")}>
               Times each day
@@ -348,12 +348,12 @@ function ReminderForm({ initial, onClose }: { initial: Reminder | null; onClose:
         </fieldset>
 
         <div className="mt-5">
-          <p className="text-base font-medium text-[#2c1e14]">Photo (optional)</p>
-          <p className="text-sm text-[#6b563a]">A picture of the actual pill strip, bottle or clinic card helps most.</p>
+          <p className="text-base font-medium text-[var(--ink)]">Photo (optional)</p>
+          <p className="text-sm text-[var(--ink-soft)]">A picture of the actual pill strip, bottle or clinic card helps most.</p>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => void pickPhoto(e.target.files)} />
           {photo ? (
             <div className="mt-2 flex items-center gap-3">
-              <img src={photo} alt="Reminder photo" className="h-20 w-20 rounded-xl border border-[#e6d3ae] object-cover" />
+              <img src={photo} alt="Reminder photo" className="h-20 w-20 rounded-[6px] border-2 border-[var(--parchment2)] object-cover" />
               <button type="button" onClick={() => fileRef.current?.click()} className={quietBtn}>
                 Change
               </button>
@@ -368,7 +368,7 @@ function ReminderForm({ initial, onClose }: { initial: Reminder | null; onClose:
           )}
         </div>
 
-        <label className="mt-5 flex items-start gap-3 text-base text-[#2c1e14]">
+        <label className="mt-5 flex items-start gap-3 text-base text-[var(--ink)]">
           <input
             type="checkbox"
             checked={escalate}
@@ -376,12 +376,12 @@ function ReminderForm({ initial, onClose }: { initial: Reminder | null; onClose:
               setEscalate(e.target.checked);
               setEscalateTouched(true);
             }}
-            className="mt-1 h-5 w-5 accent-[#b8791f]"
+            className="mt-1 h-5 w-5 accent-[var(--accent-shadow)]"
           />
           <span>Notify this device if there's no response within 30 minutes</span>
         </label>
 
-        {problem && <p className="mt-4 text-base text-[#6b563a]">{problem}</p>}
+        {problem && <p className="mt-4 text-base text-[var(--ink-soft)]">{problem}</p>}
 
         <button type="button" onClick={save} className={`${primaryBtn} mt-6 w-full py-4 text-lg`}>
           {initial ? "Save changes" : "Add reminder"}

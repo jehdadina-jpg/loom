@@ -74,12 +74,12 @@ export function HowAreYouPanel() {
       }
     >
       {notice && (
-        <div className="mb-6 rounded-2xl border-2 border-[#6d4a34] bg-[#fdf6e8] p-5" role="status">
-          <p className="text-lg text-[#2c1e14]">
+        <div className="mb-6 rounded-[6px] border-2 border-[var(--focus)] bg-[var(--parchment)] p-5" role="status">
+          <p className="text-lg text-[var(--ink)]">
             This week sounds heavier than the last few. That happens to almost everyone caring for someone, and it's worth
             making a little room for yourself.
           </p>
-          <ul className="mt-3 list-disc space-y-1 pl-6 text-base text-[#2c1e14]">
+          <ul className="mt-3 list-disc space-y-1 pl-6 text-base text-[var(--ink)]">
             <li>Ask your ASHA worker or the primary health centre whether there is day care or respite care nearby.</li>
             <li>Tele-MANAS, the free national mental health helpline, is there any time: call 14416.</li>
             <li>Hand one regular task to another family member — a session, a reminder, or a meal.</li>
@@ -92,7 +92,7 @@ export function HowAreYouPanel() {
 
       <TwoLines checkins={state.checkins} profileId={activeId} name={words.name} />
 
-      <p className="mt-6 text-base text-[#6b563a]">
+      <p className="mt-6 text-base text-[var(--ink-soft)]">
         Your answers stay on this device. They are not sent to the health worker and are not part of any referral.
       </p>
     </Page>
@@ -113,8 +113,8 @@ function CheckinForm({
     <Page title="How are you?" lead="Answer what you like. There are no right answers, and any question can be left blank.">
       <div className="space-y-4">
         {QUESTIONS.map((q) => (
-          <fieldset key={q.id} className="rounded-2xl border border-[#e6d3ae] bg-white p-5">
-            <legend className="px-1 text-lg font-semibold text-[#2c1e14]">{q.text}</legend>
+          <fieldset key={q.id} className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-5">
+            <legend className="px-1 text-lg font-semibold text-[var(--ink)]">{q.text}</legend>
             <div className="mt-2 flex flex-wrap gap-2">
               {SCALE.map((label, i) => (
                 <button
@@ -129,8 +129,8 @@ function CheckinForm({
                       return next;
                     })
                   }
-                  className={`rounded-xl border-2 px-3 py-2 text-base ${
-                    answers[q.id] === i ? "border-[#b8791f] bg-[#f6e3b8] font-semibold text-[#2c1e14]" : "border-[#e6d3ae] bg-white text-[#6b563a]"
+                  className={`rounded-[6px] border-2 px-3 py-2 text-base ${
+                    answers[q.id] === i ? "border-[var(--accent-shadow)] bg-[#f6e3b8] font-semibold text-[var(--ink)]" : "border-[var(--parchment2)] bg-[var(--parchment)] text-[var(--ink-soft)]"
                   }`}
                 >
                   {label}
@@ -208,7 +208,7 @@ function TwoLines({ checkins, profileId, name }: { checkins: Checkin[]; profileI
           alt={`How stretched you have felt each week you checked in, over the same ${weeks.length} weeks.`}
         />
       </div>
-      <div className="mt-2 flex justify-between text-sm text-[#6b563a]">
+      <div className="mt-2 flex justify-between text-sm text-[var(--ink-soft)]">
         <span>Week of {longDate(weeks[0])}</span>
         <span>This week</span>
       </div>
@@ -243,19 +243,19 @@ function WeekChart({
   const path = pts.reduce((d, p, i) => (p ? `${d}${d && pts[i - 1] ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)} ` : d), "");
   return (
     <figure className="m-0">
-      <figcaption className="text-base font-semibold text-[#2c1e14]">{title}</figcaption>
+      <figcaption className="text-base font-semibold text-[var(--ink)]">{title}</figcaption>
       <div className="mt-1 grid grid-cols-[auto_1fr] gap-2">
-        <div aria-hidden className="flex flex-col justify-between text-sm text-[#6b563a]">
+        <div aria-hidden className="flex flex-col justify-between text-sm text-[var(--ink-soft)]">
           <span>{top}</span>
           <span>{bottom}</span>
         </div>
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" role="img" aria-label={alt} className="rounded-md border border-[#e6d3ae] bg-[#fffdf8]">
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" role="img" aria-label={alt} className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[#fffdf8]">
           <title>{alt}</title>
           {weeks.map((_, i) => (
-            <line key={i} x1={x(i)} x2={x(i)} y1={0} y2={H} stroke="#efe3cb" strokeWidth="1" />
+            <line key={i} x1={x(i)} x2={x(i)} y1={0} y2={H} stroke="var(--parchment2)" strokeWidth="1" />
           ))}
-          {path && <path d={path} fill="none" stroke="#2c1e14" strokeWidth="2" strokeDasharray={dashed ? "6 4" : undefined} vectorEffect="non-scaling-stroke" />}
-          {pts.map((p, i) => (p ? <circle key={i} cx={p.x} cy={p.y} r="3" fill={dashed ? "#fffdf8" : "#2c1e14"} stroke="#2c1e14" strokeWidth="1.5" /> : null))}
+          {path && <path d={path} fill="none" stroke="var(--ink)" strokeWidth="2" strokeDasharray={dashed ? "6 4" : undefined} vectorEffect="non-scaling-stroke" />}
+          {pts.map((p, i) => (p ? <circle key={i} cx={p.x} cy={p.y} r="3" fill={dashed ? "#fffdf8" : "var(--ink)"} stroke="var(--ink)" strokeWidth="1.5" /> : null))}
         </svg>
       </div>
     </figure>

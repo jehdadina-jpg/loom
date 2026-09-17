@@ -54,12 +54,12 @@ export function RudasPanel() {
       }
     >
       {justSaved && (
-        <div className="mb-6 rounded-2xl border-2 border-[#2c1e14] bg-white p-5" role="status">
-          <p className="text-sm font-semibold uppercase tracking-wide text-[#6b563a]">Saved</p>
-          <p className="mt-1 text-lg text-[#2c1e14]">
+        <div className="mb-6 rounded-[6px] border-2 border-[var(--ink)] bg-[var(--parchment)] p-5" role="status">
+          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--ink-soft)]">Saved</p>
+          <p className="mt-1 text-lg text-[var(--ink)]">
             {justSaved.total} out of {RUDAS_MAX}, {longDate(justSaved.date)}.
           </p>
-          <p className="mt-2 text-lg text-[#2c1e14]">{rudasMessage(justSaved.total)}</p>
+          <p className="mt-2 text-lg text-[var(--ink)]">{rudasMessage(justSaved.total)}</p>
         </div>
       )}
 
@@ -74,11 +74,11 @@ export function RudasPanel() {
         }
       >
         {history.length === 0 ? (
-          <p className="text-base text-[#6b563a]">Nothing yet.</p>
+          <p className="text-base text-[var(--ink-soft)]">Nothing yet.</p>
         ) : (
           <table className="w-full text-left text-base">
             <thead>
-              <tr className="border-b border-[#efe3cb] text-[#6b563a]">
+              <tr className="border-b border-[var(--parchment2)] text-[var(--ink-soft)]">
                 <th scope="col" className="py-2 pr-3 font-medium">Date</th>
                 <th scope="col" className="py-2 pr-3 font-medium">Total (out of 30)</th>
                 <th scope="col" className="py-2 font-medium">Given by</th>
@@ -86,7 +86,7 @@ export function RudasPanel() {
             </thead>
             <tbody>
               {history.map((r) => (
-                <tr key={r.id} className="border-b border-[#efe3cb] text-[#2c1e14]">
+                <tr key={r.id} className="border-b border-[var(--parchment2)] text-[var(--ink)]">
                   <td className="py-2 pr-3">{longDate(r.date)}</td>
                   <td className="py-2 pr-3">{r.total}</td>
                   <td className="py-2">{r.administeredBy || "Not recorded"}</td>
@@ -97,7 +97,7 @@ export function RudasPanel() {
         )}
       </Section>
 
-      <p className="mt-6 text-base text-[#6b563a]">
+      <p className="mt-6 text-base text-[var(--ink-soft)]">
         RUDAS is used here because it holds up across education, gender and language, and a health worker can give it after brief
         training. The notes on each item are reminders — use the full administration guide.
       </p>
@@ -133,11 +133,11 @@ function RudasForm({ onCancel, onSave }: { onCancel: () => void; onSave: (r: Rud
   return (
     <Page title="Record a RUDAS" lead="Score each item as you go. The total adds itself up.">
       <div className="mb-4 grid gap-4 sm:grid-cols-2">
-        <label htmlFor={byId} className="block text-base font-medium text-[#2c1e14]">
+        <label htmlFor={byId} className="block text-base font-medium text-[var(--ink)]">
           Given by
           <input id={byId} value={by} onChange={(e) => setBy(e.target.value)} placeholder="e.g. ASHA worker's name" className={`${field} mt-2`} />
         </label>
-        <label htmlFor={dateId} className="block text-base font-medium text-[#2c1e14]">
+        <label htmlFor={dateId} className="block text-base font-medium text-[var(--ink)]">
           Date
           <input id={dateId} type="date" value={date} onChange={(e) => setDate(e.target.value)} className={`${field} mt-2`} />
         </label>
@@ -150,17 +150,17 @@ function RudasForm({ onCancel, onSave }: { onCancel: () => void; onSave: (r: Rud
           const step = (delta: number) =>
             setScores((s) => ({ ...s, [item.id]: Math.min(item.max, Math.max(0, s[item.id] + delta)) }));
           return (
-            <section key={item.id} className="rounded-2xl border border-[#e6d3ae] bg-white p-5 shadow-sm">
+            <section key={item.id} className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-5 ">
               <div className="flex items-baseline justify-between gap-2">
-                <h2 className="text-lg font-semibold text-[#2c1e14]">{item.label}</h2>
-                <span className="text-base text-[#6b563a]">0 to {item.max}</span>
+                <h2 className="text-lg font-semibold text-[var(--ink)]">{item.label}</h2>
+                <span className="text-base text-[var(--ink-soft)]">0 to {item.max}</span>
               </div>
-              <p className="mt-1 text-base text-[#6b563a]">{item.instruction}</p>
+              <p className="mt-1 text-base text-[var(--ink-soft)]">{item.instruction}</p>
               <div className="mt-4 flex items-center gap-3" role="group" aria-label={`${item.label} score`}>
                 <button onClick={() => step(-1)} disabled={value <= 0} className={`${secondaryBtn} h-12 w-12 !px-0 text-2xl`} aria-label={`Lower ${item.label}`}>
                   −
                 </button>
-                <output className="min-w-[4ch] text-center text-2xl font-bold text-[#2c1e14]" aria-live="polite">
+                <output className="min-w-[4ch] text-center text-2xl font-bold text-[var(--ink)]" aria-live="polite">
                   {value}
                 </output>
                 <button onClick={() => step(1)} disabled={value >= item.max} className={`${secondaryBtn} h-12 w-12 !px-0 text-2xl`} aria-label={`Raise ${item.label}`}>
@@ -172,9 +172,9 @@ function RudasForm({ onCancel, onSave }: { onCancel: () => void; onSave: (r: Rud
         })}
       </div>
 
-      <div className="sticky bottom-0 mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-[#e6d3ae] bg-[#fdf6e8] p-4 shadow-lg">
-        <p className="mr-auto text-xl font-bold text-[#2c1e14]">
-          Total {total} <span className="font-normal text-[#6b563a]">out of {RUDAS_MAX}</span>
+      <div className="sticky bottom-0 mt-6 flex flex-wrap items-center gap-3 rounded-[6px] border-t-4 border-[var(--ink-soft)] bg-[var(--parchment)] p-4">
+        <p className="mr-auto text-xl font-bold text-[var(--ink)]">
+          Total {total} <span className="font-normal text-[var(--ink-soft)]">out of {RUDAS_MAX}</span>
         </p>
         <button onClick={onCancel} className={secondaryBtn}>
           Cancel

@@ -8,9 +8,9 @@ import { trajectorySentence } from "../../game/trajectory/trajectory";
 import { StillGettingToKnow } from "../charts/DomainCharts";
 
 const DIRECTION_STYLE: Record<TrendFlag["direction"], { dot: string; badge: string; word: string }> = {
-  improving: { dot: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-800 border-emerald-200", word: "improving" },
-  steady: { dot: "bg-sky-500", badge: "bg-sky-50 text-sky-800 border-sky-200", word: "steady" },
-  "worth-watching": { dot: "bg-amber-500", badge: "bg-amber-50 text-amber-900 border-amber-200", word: "worth watching" },
+  improving: { dot: "bg-[var(--good)]", badge: "bg-[var(--good-soft)] text-[var(--good-ink)] border-[var(--good)]", word: "improving" },
+  steady: { dot: "bg-[var(--ink-soft)]", badge: "bg-[var(--parchment2)] text-[var(--ink-soft)] border-[var(--ink-soft)]", word: "steady" },
+  "worth-watching": { dot: "bg-[var(--watch)]", badge: "bg-[var(--watch-soft)] text-[var(--watch-ink)] border-[var(--watch)]", word: "worth watching" },
 };
 
 /** Day by day, in words and numbers — no bar lengths or colours to decode. */
@@ -20,7 +20,7 @@ function DayByDay({ history }: { history: DaySummary[] }) {
     <table className="w-full text-left text-sm">
       <caption className="sr-only">Activities completed and typical help needed on each recorded day, newest first</caption>
       <thead>
-        <tr className="border-b border-slate-200 text-slate-500">
+        <tr className="border-b border-[var(--parchment2)] text-[var(--ink-soft)]">
           <th scope="col" className="py-2 pr-3 font-medium">Day</th>
           <th scope="col" className="py-2 pr-3 font-medium">Activities done</th>
           <th scope="col" className="py-2 font-medium">Typical help needed</th>
@@ -28,7 +28,7 @@ function DayByDay({ history }: { history: DaySummary[] }) {
       </thead>
       <tbody>
         {days.map((d) => (
-          <tr key={d.dateKey} className="border-b border-slate-100 text-slate-700">
+          <tr key={d.dateKey} className="border-b border-[var(--parchment2)] text-[var(--ink)]">
             <td className="py-2 pr-3">{d.label}</td>
             <td className="py-2 pr-3">{d.activities}</td>
             <td className="py-2">{cueLabel(d.avgCueLevel)}</td>
@@ -56,13 +56,13 @@ export function TrendsPanel() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-800">Trends Over Time</h1>
-        <p className="mt-1 text-slate-700">{trajectorySentence(trajectory, words)}</p>
+        <h1 className="text-3xl font-bold text-[var(--ink)]">Trends Over Time</h1>
+        <p className="mt-1 text-[var(--ink)]">{trajectorySentence(trajectory, words)}</p>
       </header>
 
-      <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-        <p className="text-sm font-semibold text-amber-900">What this page can and can't tell you</p>
-        <p className="mt-1 text-sm text-amber-900">
+      <div className="mb-8 rounded-[6px] border-2 border-[var(--watch)] bg-[var(--watch-soft)] p-5">
+        <p className="text-sm font-semibold text-[var(--watch-ink)]">What this page can and can't tell you</p>
+        <p className="mt-1 text-sm text-[var(--watch-ink)]">
           This page describes patterns in how activities were played — nothing more. LOOM does not diagnose. A change here
           can mean many things: tiredness, a new activity, mood, vision or hearing, or an off day. Use it as a conversation
           starter with a doctor or health worker, never as a conclusion on its own.
@@ -73,9 +73,9 @@ export function TrendsPanel() {
         <StillGettingToKnow trajectory={trajectory} words={words} />
       ) : (
         <>
-          <section className="mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-1 text-lg font-semibold text-slate-800">What's changed recently</h2>
-            <p className="mb-4 text-slate-700">
+          <section className="mb-8 rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-6">
+            <h2 className="mb-1 text-lg font-semibold text-[var(--ink)]">What's changed recently</h2>
+            <p className="mb-4 text-[var(--ink)]">
               {watching.length === 0
                 ? "Nothing stands out as worth watching compared with earlier weeks."
                 : watching.length === 1
@@ -90,10 +90,10 @@ export function TrendsPanel() {
                     <span aria-hidden className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${style.dot}`} />
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium text-slate-800">{f.headline}</span>
-                        <span className={`rounded-full border px-2 py-0.5 text-sm font-medium ${style.badge}`}>{style.word}</span>
+                        <span className="font-medium text-[var(--ink)]">{f.headline}</span>
+                        <span className={`rounded-[6px] border px-2 py-0.5 text-sm font-medium ${style.badge}`}>{style.word}</span>
                       </div>
-                      <p className="mt-0.5 text-sm text-slate-600">{f.detail}</p>
+                      <p className="mt-0.5 text-sm text-[var(--ink-soft)]">{f.detail}</p>
                     </div>
                   </li>
                 );
@@ -101,9 +101,9 @@ export function TrendsPanel() {
             </ul>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-1 text-lg font-semibold text-slate-800">Day by Day</h2>
-            <p className="mb-4 text-slate-700">
+          <section className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-6">
+            <h2 className="mb-1 text-lg font-semibold text-[var(--ink)]">Day by Day</h2>
+            <p className="mb-4 text-[var(--ink)]">
               {history.some((d) => d.activities > 0)
                 ? `On the most recent day with activities, the typical help needed was ${cueLabel(history.filter((d) => d.activities > 0).slice(-1)[0].avgCueLevel)}.`
                 : "No activities recorded on this device yet."}

@@ -76,13 +76,13 @@ function StartSheet({
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-t-3xl bg-[#fdf6e8] p-6 shadow-2xl sm:rounded-3xl"
+        className="w-full max-w-md rounded-t-[6px] border-t-4 border-[var(--ink-soft)] bg-[var(--parchment)] p-6 sm:rounded-[6px] sm:border-t-0 sm:border-2"
       >
-        <h2 id={titleId} className="text-xl font-bold text-[#2c1e14]">
+        <h2 id={titleId} className="text-xl font-bold text-[var(--ink)]">
           Start a session
         </h2>
 
-        <label htmlFor={selectId} className="mt-5 block text-base font-medium text-[#2c1e14]">
+        <label htmlFor={selectId} className="mt-5 block text-base font-medium text-[var(--ink)]">
           Which activity
         </label>
         <select
@@ -90,7 +90,7 @@ function StartSheet({
           ref={selectRef}
           value={choice}
           onChange={(e) => setChoice(e.target.value)}
-          className="mt-2 w-full rounded-xl border-2 border-[#d9c49b] bg-white px-3 py-3 text-base text-[#2c1e14] focus:border-[#b8791f] focus:outline-none"
+          className="mt-2 w-full rounded-[6px] border-2 border-[var(--ink-soft)] bg-[var(--parchment)] px-3 py-3 text-base text-[var(--ink)] focus:border-[var(--accent-shadow)] focus:outline-none"
         >
           <option value={APP_CHOOSES}>Let the app choose</option>
           {grouped.map((g) => (
@@ -104,24 +104,24 @@ function StartSheet({
           ))}
         </select>
 
-        <div className="mt-4 rounded-xl bg-white/70 px-4 py-3" aria-live="polite">
-          <p className="text-base text-[#2c1e14]">
-            {picked.title} <span className="text-[#6b563a]">· {pickedPlace}</span>
+        <div className="mt-4 rounded-[6px] bg-[var(--parchment)]/70 px-4 py-3" aria-live="polite">
+          <p className="text-base text-[var(--ink)]">
+            {picked.title} <span className="text-[var(--ink-soft)]">· {pickedPlace}</span>
           </p>
-          <p className="mt-1 text-sm text-[#6b563a]">
+          <p className="mt-1 text-sm text-[var(--ink-soft)]">
             {appChooses ? suggestion.reason : "Any activity can be started at any time of day."}
           </p>
         </div>
 
         <button
           onClick={() => onStart(picked.id, appChooses ? "app" : "caregiver")}
-          className="mt-6 w-full rounded-2xl bg-[#e0a835] px-6 py-4 text-lg font-bold text-[#2c1e14] shadow-[0_4px_0_#b8791f] transition hover:bg-[#e8b54a] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6d4a34] active:translate-y-0.5 active:shadow-[0_2px_0_#b8791f]"
+          className="mt-6 w-full rounded-[6px] bg-[var(--accent)] px-6 py-4 text-lg font-bold text-[var(--ink)] shadow-[0_4px_0_var(--accent-shadow)] transition hover:bg-[#e8b54a] focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] active:translate-y-0.5 active:shadow-[0_2px_0_var(--accent-shadow)]"
         >
           Hand over the device
         </button>
         <button
           onClick={onClose}
-          className="mt-2 w-full rounded-xl px-4 py-3 text-base text-[#6b563a] hover:bg-black/5 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#6d4a34]"
+          className="mt-2 w-full rounded-[6px] px-4 py-3 text-base text-[var(--ink-soft)] hover:bg-black/5 focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]"
         >
           Not now
         </button>

@@ -20,18 +20,18 @@ import type { HealthWorkerEvent } from "../../health-worker/boundary";
 import { DomainCharts } from "../charts/DomainCharts";
 
 export const ARCHIVE_CSS = `
-body { margin: 0; background: #f4efe6; }
-.archive { font-family: "Segoe UI", system-ui, sans-serif; color: #2c1e14; max-width: 860px; margin: 0 auto; padding: 24px; line-height: 1.45; }
+body { margin: 0; background: #e8dcc0; }
+.archive { font-family: "Segoe UI", system-ui, sans-serif; color: #2e2318; max-width: 860px; margin: 0 auto; padding: 24px; line-height: 1.45; }
 .archive h1 { font-size: 26px; margin: 0 0 4px; }
-.archive h2 { font-size: 19px; margin: 28px 0 8px; border-bottom: 2px solid #e6d3ae; padding-bottom: 4px; }
+.archive h2 { font-size: 19px; margin: 28px 0 8px; border-bottom: 2px solid #e8dcc0; padding-bottom: 4px; }
 .archive p, .archive li, .archive td, .archive th, .archive figcaption { font-size: 15px; }
-.archive table { border-collapse: collapse; width: 100%; background: #fff; }
-.archive td, .archive th { text-align: left; padding: 6px 8px; border-bottom: 1px solid #efe3cb; vertical-align: top; }
+.archive table { border-collapse: collapse; width: 100%; background: #f7efdc; }
+.archive td, .archive th { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e8dcc0; vertical-align: top; }
 .archive .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-.archive figure { margin: 0; background: #fff; border: 1px solid #e6d3ae; border-radius: 10px; overflow: hidden; }
+.archive figure { margin: 0; background: #f7efdc; border: 1px solid #e8dcc0; border-radius: 6px; overflow: hidden; }
 .archive figure img { width: 100%; display: block; }
 .archive figcaption { padding: 6px 8px; }
-.archive pre { white-space: pre-wrap; word-break: break-word; font-size: 14px; background: #fff; border: 1px solid #e6d3ae; padding: 12px; border-radius: 8px; }
+.archive pre { white-space: pre-wrap; word-break: break-word; font-size: 14px; background: #f7efdc; border: 1px solid #e8dcc0; padding: 12px; border-radius: 6px; }
 `;
 
 export interface ArchiveInput {

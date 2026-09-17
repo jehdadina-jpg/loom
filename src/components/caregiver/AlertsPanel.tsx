@@ -52,15 +52,15 @@ export function AlertsPanel() {
       )}
 
       {trajectory.state === "getting-to-know" && (
-        <p className="mt-6 rounded-2xl border border-dashed border-[#d9c49b] bg-[#fffdf8] p-4 text-base text-[#2c1e14]">
+        <p className="mt-6 rounded-[6px] border border-dashed border-[var(--ink-soft)] bg-[#fffdf8] p-4 text-base text-[var(--ink)]">
           Still getting to know {personWords(active.person).object}: {trajectory.daysSoFar} of {trajectory.daysNeeded} days so far.
           Suggestions to see a doctor can only appear once there is a starting point to compare with.
         </p>
       )}
 
-      <details className="mt-8 rounded-2xl border border-[#e6d3ae] bg-[#fdf6e8] p-5">
-        <summary className="cursor-pointer text-base font-semibold text-[#2c1e14]">Handled</summary>
-        <p className="mt-2 text-base text-[#6b563a]">
+      <details className="mt-8 rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-5">
+        <summary className="cursor-pointer text-base font-semibold text-[var(--ink)]">Handled</summary>
+        <p className="mt-2 text-base text-[var(--ink-soft)]">
           {handled.length === 0 ? "Nothing handled yet." : "Everything that has been dealt with stays here. Nothing is deleted."}
         </p>
         <ul className="mt-3 space-y-3">
@@ -83,19 +83,19 @@ function AlertCard({ alert, onShare }: { alert: AlertEntry; onShare: () => void 
   const pinned = alert.change ? isPinned(alert.change.domain) : false;
 
   return (
-    <li className={`rounded-2xl border p-5 shadow-sm ${alert.kind === "referral" && isOpen ? "border-[#2c1e14] bg-white" : "border-[#e6d3ae] bg-white"}`}>
+    <li className={`rounded-[6px] border p-5  ${alert.kind === "referral" && isOpen ? "border-[var(--ink)] bg-[var(--parchment)]" : "border-[var(--parchment2)] bg-[var(--parchment)]"}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-sm font-semibold uppercase tracking-wide text-[#6b563a]">{KIND_WORD[alert.kind]}</p>
-        <p className="text-sm text-[#6b563a]">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--ink-soft)]">{KIND_WORD[alert.kind]}</p>
+        <p className="text-sm text-[var(--ink-soft)]">
           Raised {longDate(alert.raisedAt)}
           {alert.handledAt ? ` · handled ${longDate(alert.handledAt)}` : ""}
         </p>
       </div>
-      <p className="mt-1 text-lg text-[#2c1e14]">{alert.sentence}</p>
+      <p className="mt-1 text-lg text-[var(--ink)]">{alert.sentence}</p>
 
       {alert.domains && alert.domains.length > 0 && (
-        <p className="mt-2 text-base text-[#2c1e14]">
-          <span className="text-[#6b563a]">Domains that moved: </span>
+        <p className="mt-2 text-base text-[var(--ink)]">
+          <span className="text-[var(--ink-soft)]">Domains that moved: </span>
           {alert.domains.join(", ")}
         </p>
       )}
@@ -129,7 +129,7 @@ function AlertCard({ alert, onShare }: { alert: AlertEntry; onShare: () => void 
         )}
       </div>
       {pinned && (
-        <p className="mt-2 text-base text-[#6b563a]">You've fixed this setting. The app won't change it on its own until you let it.</p>
+        <p className="mt-2 text-base text-[var(--ink-soft)]">You've fixed this setting. The app won't change it on its own until you let it.</p>
       )}
 
       {showCharts && (
