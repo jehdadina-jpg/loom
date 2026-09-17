@@ -1,3 +1,5 @@
+// @loom-vault — holds album moments (Memory Vault). Must never be reachable from the health-worker route (/asha).
+// tests/boundary.test.ts finds every file carrying this marker and fails if /asha can import it.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { LocationId } from "../../data/locations/types";
 import { useProfile, scopedKey } from "../profiles/ProfileContext";
@@ -23,6 +25,13 @@ export const GUIDE_PLAN: GuideStep[] = [
   { locationId: "garden", hotspotId: "water-plants", prompt: "Water each row, one at a time.", completeOnActivityId: "garden-water" },
   { locationId: "path", hotspotId: "to-waterpoint", prompt: "Time to rest by the water.", completeOnArrivalAt: "waterpoint" },
 ];
+
+/** A session the caregiver has just handed over, waiting for the play route to open it. */
+export interface SessionLaunch {
+  sessionId: string;
+  activityId: string;
+  locationId: LocationId;
+}
 
 export interface Memory {
   id: string;
@@ -82,6 +91,10 @@ interface SessionContextValue {
   rotation: number;
   seenChapters: string[];
   markChapterSeen: (id: string) => void;
+  /** Set by the caregiver's "Hand over the device"; the play route opens it and clears it. */
+  launch: SessionLaunch | null;
+  handOver: (launch: SessionLaunch) => void;
+  clearLaunch: () => void;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -90,6 +103,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const { activeId } = useProfile();
   const key = scopedKey(STORAGE_KEY, activeId);
   const [state, setState] = useState<SessionState>(() => load(key));
+  // not persisted: a hand-over only means something in the moment it happens
+  const [launch, setLaunch] = useState<SessionLaunch | null>(null);
 
   const loadedKeyRef = useRef(key);
   useEffect(() => {
@@ -140,6 +155,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const setLastLocation = useCallback((id: LocationId) => setState((s) => ({ ...s, lastLocation: id })), []);
   const restartGuide = useCallback(() => setState((s) => ({ ...s, guideIndex: 0 })), []);
   const clearMemories = useCallback(() => setState((s) => ({ ...s, memories: [] })), []);
+  const handOver = useCallback((l: SessionLaunch) => setLaunch(l), []);
+  const clearLaunch = useCallback(() => setLaunch(null), []);
 
   const value = useMemo<SessionContextValue>(
     () => ({
@@ -158,8 +175,24 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       rotation: state.rotation,
       seenChapters: state.seenChapters,
       markChapterSeen,
+      launch,
+      handOver,
+      clearLaunch,
     }),
-    [state, setLastLocation, addMemory, noteArrival, noteActivityComplete, restartGuide, clearMemories, noteEggFound, markChapterSeen],
+    [
+      state,
+      setLastLocation,
+      addMemory,
+      noteArrival,
+      noteActivityComplete,
+      restartGuide,
+      clearMemories,
+      noteEggFound,
+      markChapterSeen,
+      launch,
+      handOver,
+      clearLaunch,
+    ],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

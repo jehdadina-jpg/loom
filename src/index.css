@@ -136,3 +136,119 @@ canvas.pixel-canvas {
 .animate-cta-glow {
   animation: cta-glow 2.6s ease-in-out infinite;
 }
+
+/* Referral summary: when it is open, printing shows only the summary. */
+@media print {
+  body.printing-referral > #root {
+    display: none !important;
+  }
+  body.printing-referral {
+    background: #fff !important;
+    overflow: visible !important;
+  }
+  body.printing-referral .referral-print-root {
+    position: static !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body.printing-referral .referral-print-root > div:last-child,
+  body.printing-referral .referral-print-root > div:last-child > div {
+    padding: 0 !important;
+    box-shadow: none !important;
+    max-width: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Console accents. Caregiver: warm gold. Health worker: indigo — deliberately unlike
+   the caregiver console and unlike every triage colour. */
+:root,
+.theme-care {
+  --accent: #f2b233;
+  --accent-hover: #f5c15a;
+  --accent-shadow: #ad7a1a;
+  --on-accent: #2e2318;
+  --focus: #6b5d4a;
+}
+.theme-asha {
+  --accent: #3d4f9a;
+  --accent-hover: #4a5daa;
+  --accent-shadow: #29366e;
+  --on-accent: #ffffff;
+  --focus: #29366e;
+}
+
+/*
+ * THE CAREGIVER PALETTE — the game's own colours, so the console and the village read as
+ * one product. Defined at :root so shared pieces (charts, the referral export) pick them
+ * up wherever they render.
+ */
+:root {
+  --parchment: #f7efdc;
+  --parchment2: #e8dcc0;
+  --ink: #2e2318;
+  --ink-hover: #241a10;
+  --ink-soft: #6b5d4a;
+  --terracotta: #c25a2e;
+  --good: #6fa34f;
+  --watch: #a8643b;
+
+  /* soft two-tone chips for semantic state, without relying on colour-mix opacity support */
+  --good-soft: #e9f1e1;
+  --good-ink: #3f6b2c;
+  --watch-soft: #f3e6dc;
+  --watch-ink: #7a431e;
+  --terracotta-soft: #f7e4dc;
+  --terracotta-ink: #7a2716;
+
+  /* the five cognitive domains as five threads — one fixed colour each, everywhere they appear */
+  --thread-memory: #c25a2e;
+  --thread-attention: #6b8e4e;
+  --thread-speed: #4e7ea3;
+  --thread-language: #a8643b;
+  --thread-visuospatial: #8a5ca8;
+}
+
+/* THE WEAVING MOTIF — a woven band for baseline ranges on every chart, and a woven edge
+   for panels in place of a soft drop shadow. LOOM is a loom; the dashboard should know it. */
+.woven-band {
+  background-image: repeating-linear-gradient(
+      45deg,
+      var(--parchment2) 0,
+      var(--parchment2) 2px,
+      transparent 2px,
+      transparent 4px
+    ),
+    repeating-linear-gradient(-45deg, var(--parchment2) 0, var(--parchment2) 2px, transparent 2px, transparent 4px);
+  background-color: var(--parchment);
+}
+
+.woven-border {
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--parchment2);
+  border-image: repeating-linear-gradient(45deg, var(--ink-soft) 0, var(--ink-soft) 2px, var(--parchment2) 2px, var(--parchment2) 4px) 2;
+  border-image-width: 2px;
+}
+
+/* A length of woven cloth as a progress fill — used wherever the caregiver console shows
+   progress, matching the cloth-length motif on the patient side. */
+.cloth-progress {
+  background-color: var(--parchment2);
+  border: 2px solid var(--ink-soft);
+  overflow: hidden;
+}
+.cloth-progress > span {
+  display: block;
+  height: 100%;
+  background-color: var(--accent);
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(46, 35, 24, 0.12) 0,
+    rgba(46, 35, 24, 0.12) 2px,
+    transparent 2px,
+    transparent 5px
+  );
+}

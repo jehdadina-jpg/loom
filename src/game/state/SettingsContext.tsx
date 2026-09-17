@@ -1,7 +1,11 @@
+// @loom-vault — holds the family voice recording. Must never be reachable from the health-worker route (/asha).
+// tests/boundary.test.ts finds every file carrying this marker and fails if /asha can import it.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { TimeMode } from "../../engine/fx/DayNight";
 import type { WeatherKind } from "../../engine/fx/Weather";
 import { useProfile, scopedKey } from "../profiles/ProfileContext";
+import type { CognitiveDomain } from "../../data/domains";
+import type { DomainOverride } from "../adapt/difficulty";
 
 export interface Settings {
   /** Multiplier applied to all patient-facing text. */
@@ -22,6 +26,8 @@ export interface Settings {
   /** Caregiver-recorded family voice note (object URL / data URL), if any. */
   familyVoiceUrl: string | null;
   familyVoiceLabel: string | null;
+  /** Caregiver-pinned adaptive settings per domain; the app won't change these on its own. */
+  adaptiveOverrides: Partial<Record<CognitiveDomain, DomainOverride>>;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -37,6 +43,7 @@ export const DEFAULT_SETTINGS: Settings = {
   adaptiveDifficulty: true,
   familyVoiceUrl: null,
   familyVoiceLabel: null,
+  adaptiveOverrides: {},
 };
 
 const STORAGE_KEY = "loom_settings_v1";

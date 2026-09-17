@@ -77,7 +77,7 @@ export function PhotosPanel() {
                     placeholder="Who or what is this?"
                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-800 focus:border-emerald-500 focus:outline-none"
                   />
-                  <p className="mt-1 text-xs text-slate-500">Read aloud when narration is on.</p>
+                  <p className="mt-1 text-sm text-slate-500">Read aloud when narration is on.</p>
                   <button
                     onClick={() => removePhoto(p.id)}
                     className="mt-2 text-sm text-slate-500 underline underline-offset-2 hover:text-rose-600"

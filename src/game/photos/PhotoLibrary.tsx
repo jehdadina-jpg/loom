@@ -1,3 +1,5 @@
+// @loom-vault — holds family photographs. Must never be reachable from the health-worker route (/asha).
+// tests/boundary.test.ts finds every file carrying this marker and fails if /asha can import it.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useProfile, scopedKey } from "../profiles/ProfileContext";
 

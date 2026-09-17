@@ -21,8 +21,10 @@ import { chickenSprite, dogSprite, goatSprite } from "../engine/sprites/animals"
 import { villagerSprite, VILLAGER_PALETTES } from "../engine/sprites/characters";
 import { flowerClumpSprite, rockSprite, bushSprite, reedSprite } from "../engine/sprites/nature";
 import { getNPC } from "./npcs";
+import type { LocationId } from "./locations/types";
 
-export type CognitiveDomain = "memory" | "attention" | "speed" | "language" | "visuospatial";
+import type { CognitiveDomain } from "./domains";
+export type { CognitiveDomain };
 
 export interface ActivityOption {
   id: string;
@@ -692,6 +694,30 @@ export const ACTIVITY_POOLS: Record<string, string[]> = {
   "path-road": ["path-animals", "path-count-hens", "path-pairs-village", "path-errand-order"],
   "water-quiet": ["water-pairs-quiet", "water-count-fish"],
 };
+
+/** The place in the village each pool's plaque stands in. */
+const POOL_LOCATIONS: Record<string, LocationId> = {
+  "home-hearth": "home",
+  "home-things": "home",
+  "market-left": "market",
+  "market-right": "market",
+  "veranda-faces": "veranda",
+  "veranda-craft": "veranda",
+  "field-left": "field",
+  "field-right": "field",
+  "garden-rows": "garden",
+  "garden-beds": "garden",
+  "community-circle": "community",
+  "community-fire": "community",
+  "path-road": "path",
+  "water-quiet": "waterpoint",
+};
+
+/** Where an activity lives, so a caregiver-started session can open in the right place. */
+export function locationForActivity(activityId: string): LocationId {
+  const poolId = Object.keys(ACTIVITY_POOLS).find((p) => ACTIVITY_POOLS[p].includes(activityId));
+  return (poolId && POOL_LOCATIONS[poolId]) || "path";
+}
 
 /** Resolves which activity a pool is offering right now. */
 export function activityFromPool(poolId: string, rotation: number): ActivityDef | undefined {

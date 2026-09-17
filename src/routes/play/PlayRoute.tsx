@@ -14,6 +14,7 @@ import { audioEngine } from "../../game/audio/AudioEngine";
 import { speechEngine } from "../../game/speech/SpeechEngine";
 import type { EasterEgg, Hotspot, LocationId } from "../../data/locations/types";
 import { ChapterCard } from "../../components/story/ChapterCard";
+import { ReminderCard } from "../../game/reminders/ReminderCard";
 import { chapterForGuideIndex } from "../../data/story";
 import { PixelSprite } from "../../components/pixel/PixelSprite";
 import { iconSprite, type IconName } from "../../engine/sprites/icons";
@@ -38,9 +39,13 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
   const session = useSession();
   const { log } = useTelemetry();
 
-  const [locationId, setLocationId] = useState<LocationId>(session.lastLocation ?? "path");
+  // A caregiver hand-over opens straight onto its activity. Nothing about the time of day
+  // is checked here — the caregiver has already decided.
+  const [launch] = useState(() => session.launch);
+  const [locationId, setLocationId] = useState<LocationId>(launch?.locationId ?? session.lastLocation ?? "path");
   const [dialogueNpc, setDialogueNpc] = useState<string | null>(null);
-  const [activityId, setActivityId] = useState<string | null>(null);
+  const [activityId, setActivityId] = useState<string | null>(launch?.activityId ?? null);
+  const openSessionRef = useRef<string | null>(launch?.sessionId ?? null);
   const [comfortOpen, setComfortOpen] = useState(false);
   const [toast, setToast] = useState<{ id: string; line: string } | null>(null);
   const [timeLabel, setTimeLabel] = useState<string | null>(null);
@@ -75,6 +80,19 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
     window.addEventListener("pointerdown", unlock, { once: true });
     return () => window.removeEventListener("pointerdown", unlock);
   }, []);
+
+  useEffect(() => {
+    if (launch) session.clearLaunch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function closeActivity() {
+    if (openSessionRef.current) {
+      log({ type: "session_end", sessionId: openSessionRef.current, timestamp: Date.now() });
+      openSessionRef.current = null;
+    }
+    setActivityId(null);
+  }
 
   useEffect(() => {
     session.setLastLocation(locationId);
@@ -277,25 +295,30 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
         aria-hidden
       />
 
+      {/* a reminder waits for whatever is open to finish, so it never lands on top of something */}
+      {!overlayOpen && !chapterCard && (
+        <ReminderCard textScale={settings.textScale} reducedMotion={settings.reducedMotion} />
+      )}
+
       {dialogueNpc && (
-        <div key={dialogueNpc} className="relative z-40 animate-crossfade">
+        <div key={dialogueNpc} className="absolute inset-0 z-40 animate-crossfade">
           <DialogueOverlay npcId={dialogueNpc} locationId={locationId} onClose={() => setDialogueNpc(null)} />
         </div>
       )}
 
       {activity && (
-        <div key={activity.id} className="relative z-40 animate-crossfade">
+        <div key={activity.id} className="absolute inset-0 z-40 animate-crossfade">
           <ActivityOverlay
             activity={activity}
             locationId={locationId}
-            onClose={() => setActivityId(null)}
-            onComplete={() => setActivityId(null)}
+            onClose={closeActivity}
+            onComplete={closeActivity}
           />
         </div>
       )}
 
       {comfortOpen && (
-        <div className="relative z-40 animate-crossfade">
+        <div className="absolute inset-0 z-40 animate-crossfade">
           <ComfortPanel locationId={locationId} onClose={() => setComfortOpen(false)} />
         </div>
       )}

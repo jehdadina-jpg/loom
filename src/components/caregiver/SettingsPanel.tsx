@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { useSettings } from "../../game/state/SettingsContext";
 import { useSession } from "../../game/session/SessionContext";
-import { COMMUNITY_PACKS } from "../../data/community/packs";
 
 function Toggle({
   label,
@@ -89,14 +88,15 @@ export function SettingsPanel() {
       </header>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold text-slate-800">Reading &amp; comfort</h2>
+        <h2 className="text-lg font-semibold text-slate-800">Reading &amp; comfort</h2>
+        <p className="mb-3 text-slate-600">How large and how clear everything looks and sounds on the patient side.</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-slate-200 bg-white p-4">
             <span className="block font-medium text-slate-800">Text size</span>
             <span className="mb-3 block text-sm text-slate-500">Larger text throughout the game</span>
             <div className="flex gap-2">
               {[
-                { label: "Normal", value: 1 },
+                { label: "Regular", value: 1 },
                 { label: "Large", value: 1.15 },
                 { label: "Largest", value: 1.3 },
               ].map((opt) => (
@@ -136,7 +136,8 @@ export function SettingsPanel() {
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold text-slate-800">The village clock &amp; weather</h2>
+        <h2 className="text-lg font-semibold text-slate-800">The village clock &amp; weather</h2>
+        <p className="mb-3 text-slate-600">What time of day and what weather the village shows.</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-slate-200 bg-white p-4">
             <span className="block font-medium text-slate-800">Time of day</span>
@@ -160,7 +161,7 @@ export function SettingsPanel() {
                   }`}
                 >
                   <span className="block font-medium">{opt.label}</span>
-                  <span className="block text-xs text-slate-500">{opt.hint}</span>
+                  <span className="block text-sm text-slate-500">{opt.hint}</span>
                 </button>
               ))}
             </div>
@@ -192,7 +193,8 @@ export function SettingsPanel() {
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold text-slate-800">Guidance</h2>
+        <h2 className="text-lg font-semibold text-slate-800">Guidance</h2>
+        <p className="mb-3 text-slate-600">How much the app helps along the way, and whether it adapts on its own.</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <Toggle
             label="Guided session"
@@ -208,7 +210,7 @@ export function SettingsPanel() {
           />
           <Toggle
             label="Adapt to how much help is needed"
-            hint="Shows fewer choices after a hard round, more after an easy one. Based on support given — never on mistakes."
+            hint="Shows fewer choices after a round that needed lots of help, more after one that needed little. Every change is explained on the Alerts page."
             checked={settings.adaptiveDifficulty}
             onChange={(v) => update({ adaptiveDifficulty: v })}
           />
@@ -224,33 +226,6 @@ export function SettingsPanel() {
               Restart
             </button>
           </div>
-        </div>
-      </section>
-
-      <section className="mb-8">
-        <h2 className="mb-1 text-lg font-semibold text-slate-800">Community pack</h2>
-        <p className="mb-3 text-sm text-slate-500">
-          Swaps in local greetings, village naming and accent colour. The core village stays neutral so it isn't tied to
-          any one state's culture.
-        </p>
-        <div className="grid gap-3 sm:grid-cols-4">
-          {COMMUNITY_PACKS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => update({ communityPackId: p.id })}
-              className={`rounded-xl border p-4 text-left transition ${
-                settings.communityPackId === p.id
-                  ? "border-emerald-600 bg-emerald-50"
-                  : "border-slate-200 bg-white hover:bg-slate-50"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full" style={{ background: p.accent }} />
-                <span className="font-medium text-slate-800">{p.label}</span>
-              </span>
-              <span className="mt-1 block text-sm text-slate-500">“{p.greetingWord}”</span>
-            </button>
-          ))}
         </div>
       </section>
 
