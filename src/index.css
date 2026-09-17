@@ -178,6 +178,28 @@ canvas.pixel-canvas {
   }
 }
 
+/* Doctor visit report: same treatment again — printing shows only the report. */
+@media print {
+  body.printing-visit-report > #root {
+    display: none !important;
+  }
+  body.printing-visit-report {
+    background: #fff !important;
+    overflow: visible !important;
+  }
+  body.printing-visit-report .visit-report-print-root {
+    position: static !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body.printing-visit-report .visit-report-print-root > div:last-child,
+  body.printing-visit-report .visit-report-print-root > div:last-child > div {
+    padding: 0 !important;
+    box-shadow: none !important;
+    max-width: none !important;
+  }
+}
+
 /* Console accents. Caregiver: warm gold. Health worker: indigo — deliberately unlike
    the caregiver console and unlike every triage colour. */
 :root,

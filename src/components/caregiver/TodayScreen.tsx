@@ -20,6 +20,7 @@ import { RemindersPanel } from "./RemindersPanel";
 import { PreservedPanel } from "./PreservedPanel";
 import { MoodPrompt } from "./MoodPrompt";
 import { TalkAboutPanel } from "./TalkAboutPanel";
+import { DoctorVisitBanner } from "./DoctorVisitBanner";
 import { Drawer } from "../shared/Drawer";
 
 const DAY = 86_400_000;
@@ -69,10 +70,12 @@ export function TodayScreen({
   onStartSession,
   onOpenAlerts,
   onOpenProgress,
+  onOpenDoctorVisit,
 }: {
   onStartSession: () => void;
   onOpenAlerts: () => void;
   onOpenProgress: () => void;
+  onOpenDoctorVisit: () => void;
 }) {
   const { events } = useTelemetry();
   const { reminders, log, now } = useReminders();
@@ -154,6 +157,8 @@ export function TodayScreen({
       <PreservedPanel />
 
       <MoodPrompt />
+
+      <DoctorVisitBanner onOpen={onOpenDoctorVisit} />
 
       <section className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-6 sm:p-8">
         <p className="text-lg text-[var(--ink-soft)]">{greeting(new Date(now))}</p>

@@ -8,6 +8,7 @@ import { PhotosPanel } from "../../components/caregiver/PhotosPanel";
 import { PeoplePanel } from "../../components/caregiver/PeoplePanel";
 import { VaultEngagementPanel } from "../../components/caregiver/VaultEngagementPanel";
 import { HandoverCard } from "../../components/caregiver/HandoverCard";
+import { DoctorVisitPanel } from "../../components/visit/DoctorVisitPanel";
 import { TrendsPanel } from "../../components/caregiver/TrendsPanel";
 import { RhythmPanel } from "../../components/caregiver/RhythmPanel";
 import { AlertsPanel } from "../../components/caregiver/AlertsPanel";
@@ -41,6 +42,7 @@ const SEGMENTS = {
   progress: [
     { id: "trends", label: "Trends" },
     { id: "rhythm", label: "Time of day" },
+    { id: "doctor-visit", label: "Doctor visit" },
     { id: "assessments", label: "Assessments" },
   ],
   setup: [
@@ -202,7 +204,15 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
 
       <main key={nav.tab} className="animate-crossfade pb-28 sm:pb-6">
         {nav.tab === "today" && (
-          <TodayScreen onStartSession={onStartSession} onOpenAlerts={() => setAlertsOpen(true)} onOpenProgress={() => goTab("progress")} />
+          <TodayScreen
+            onStartSession={onStartSession}
+            onOpenAlerts={() => setAlertsOpen(true)}
+            onOpenProgress={() => goTab("progress")}
+            onOpenDoctorVisit={() => {
+              goTab("progress");
+              setSegment("progress", "doctor-visit");
+            }}
+          />
         )}
 
         {nav.tab === "world" && (
@@ -226,6 +236,7 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
           <Segmented tab="progress" value={segment("progress")} onChange={setSegment}>
             {segment("progress") === "trends" && <TrendsPanel />}
             {segment("progress") === "rhythm" && <RhythmPanel />}
+            {segment("progress") === "doctor-visit" && <DoctorVisitPanel />}
             {segment("progress") === "assessments" && <RudasPanel />}
           </Segmented>
         )}

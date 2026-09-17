@@ -48,12 +48,31 @@ function recentWords(d: DomainTrajectory): string {
   return "about the same help as in the first two weeks";
 }
 
-export function domainAltText(d: DomainTrajectory): string {
+export function domainAltText(d: DomainTrajectory, medMarkers: MedicationMarker[] = []): string {
   const since = d.since && d.pattern !== "stable" ? ` since ${formatDay(d.since)}` : "";
-  return `${DOMAIN_NAMES[d.domain]}: ${PATTERN_WORDS[d.pattern]}${since}. Lately, ${recentWords(d)}.`;
+  const marks = medMarkers.length ? ` Medicine changed: ${medMarkers.map((m) => formatDay(m.date)).join(", ")}.` : "";
+  return `${DOMAIN_NAMES[d.domain]}: ${PATTERN_WORDS[d.pattern]}${since}. Lately, ${recentWords(d)}.${marks}`;
 }
 
-function DomainChart({ d, from, to, compact }: { d: DomainTrajectory; from: number; to: number; compact?: boolean }) {
+/** A dated mark for a human to read, never a claim: this never says or implies the medicine caused anything. */
+export interface MedicationMarker {
+  date: number;
+  label: string;
+}
+
+function DomainChart({
+  d,
+  from,
+  to,
+  compact,
+  medMarkers = [],
+}: {
+  d: DomainTrajectory;
+  from: number;
+  to: number;
+  compact?: boolean;
+  medMarkers?: MedicationMarker[];
+}) {
   const span = Math.max(DAY, to - from);
   const x = (t: number) => ((t - from) / span) * W;
   const y = (v: number) => (1 - v) * (H - 8) + 4;
@@ -66,7 +85,8 @@ function DomainChart({ d, from, to, compact }: { d: DomainTrajectory; from: numb
         .join(" L")} Z`
     : "";
   const line = shown.map((p, i) => `${i ? "L" : "M"}${x(p.day).toFixed(1)},${y(p.mean).toFixed(1)}`).join(" ");
-  const alt = domainAltText(d);
+  const marksInRange = medMarkers.filter((m) => m.date >= from && m.date <= to);
+  const alt = domainAltText(d, marksInRange);
   const moved = d.pattern !== "stable";
   const thread = DOMAIN_THREAD[d.domain];
   const weaveId = `weave-${d.domain}`;
@@ -141,9 +161,15 @@ function DomainChart({ d, from, to, compact }: { d: DomainTrajectory; from: numb
           {moved && d.since && d.since >= from && (
             <line x1={x(d.since)} x2={x(d.since)} y1={0} y2={H} stroke={WATCH} strokeWidth="1.4" strokeDasharray="2 3" />
           )}
+          {marksInRange.map((m) => (
+            <line key={m.date} x1={x(m.date)} x2={x(m.date)} y1={0} y2={H} stroke={INK} strokeWidth="1.6" />
+          ))}
         </svg>
       </div>
-      <figcaption style={{ fontSize: 14, color: INK_SOFT, marginTop: 4 }}>{recentWords(d).replace(/^./, (c) => c.toUpperCase())}.</figcaption>
+      <figcaption style={{ fontSize: 14, color: INK_SOFT, marginTop: 4 }}>
+        {recentWords(d).replace(/^./, (c) => c.toUpperCase())}.
+        {marksInRange.length > 0 && ` Medicine changed: ${marksInRange.map((m) => formatDay(m.date)).join(", ")}.`}
+      </figcaption>
     </figure>
   );
 }
@@ -152,8 +178,9 @@ export function ChartKey() {
   return (
     <p style={{ fontSize: 14, color: INK_SOFT, margin: "8px 0 0" }}>
       Woven band and dashed line: the person's own first two weeks. Tinted band: the range over each past week. Solid
-      thread: the week's average, in that domain's own colour. Dotted upright line: when a change began. Higher means
-      done more on their own.
+      thread: the week's average, in that domain's own colour. Dotted upright line: when a change began. A solid
+      upright line marks a date a medicine changed — a marker to bring up with a doctor, not a claim about what it
+      did. Higher means done more on their own.
     </p>
   );
 }
@@ -164,12 +191,14 @@ export function DomainCharts({
   weeks = 8,
   compact,
   now = Date.now(),
+  medMarkers = [],
 }: {
   trajectory: Trajectory;
   words: Words;
   weeks?: number;
   compact?: boolean;
   now?: number;
+  medMarkers?: MedicationMarker[];
 }) {
   if (trajectory.state === "getting-to-know") {
     return <StillGettingToKnow trajectory={trajectory} words={words} />;
@@ -186,7 +215,7 @@ export function DomainCharts({
         }}
       >
         {trajectory.domains.map((d) => (
-          <DomainChart key={d.domain} d={d} from={from} to={to} compact={compact} />
+          <DomainChart key={d.domain} d={d} from={from} to={to} compact={compact} medMarkers={medMarkers} />
         ))}
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: INK_SOFT, marginTop: 6 }}>

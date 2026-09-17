@@ -16,7 +16,9 @@ export type ReminderSchedule =
   /** Every day, at each of these times ("HH:MM", 24h). */
   | { kind: "daily"; times: string[] }
   /** On these weekdays (0 = Sunday) at one time. */
-  | { kind: "weekly"; days: number[]; time: string };
+  | { kind: "weekly"; days: number[]; time: string }
+  /** A single occurrence at an exact date and time — an appointment, not a recurring habit. */
+  | { kind: "once"; date: number };
 
 export interface Reminder {
   id: string;
@@ -79,6 +81,11 @@ function at(day: Date, hhmm: string): number {
 
 export function occurrencesOn(reminder: Reminder, day: Date): Occurrence[] {
   const s = reminder.schedule;
+  if (s.kind === "once") {
+    const d = new Date(s.date);
+    if (d.getFullYear() !== day.getFullYear() || d.getMonth() !== day.getMonth() || d.getDate() !== day.getDate()) return [];
+    return [{ key: `${reminder.id}|${dayStamp(day)}|once`, reminder, scheduledFor: s.date }];
+  }
   const times = s.kind === "daily" ? s.times : s.days.includes(day.getDay()) ? [s.time] : [];
   return [...new Set(times)]
     .sort()
@@ -109,6 +116,10 @@ export function formatTime(ts: number): string {
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function describeSchedule(s: ReminderSchedule): string {
+  if (s.kind === "once") {
+    const d = new Date(s.date);
+    return `${d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })} at ${formatTime(s.date)}`;
+  }
   const today = new Date();
   const times = (s.kind === "daily" ? [...s.times].sort() : [s.time]).map((t) => formatTime(at(today, t)));
   const timeText = times.length > 1 ? `${times.slice(0, -1).join(", ")} and ${times[times.length - 1]}` : times[0];

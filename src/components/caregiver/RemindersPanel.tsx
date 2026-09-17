@@ -201,7 +201,8 @@ function ReminderForm({ initial, onClose }: { initial: Reminder | null; onClose:
 
   const [category, setCategory] = useState<ReminderCategory>(initial?.category ?? "medicine");
   const [label, setLabel] = useState(initial?.label ?? "");
-  const [kind, setKind] = useState<"daily" | "weekly">(initial?.schedule.kind ?? "daily");
+  // the appointment-only "once" schedule has no editor here; editing one falls back to daily
+  const [kind, setKind] = useState<"daily" | "weekly">(initial?.schedule.kind === "weekly" ? "weekly" : "daily");
   const [times, setTimes] = useState<string[]>(initial?.schedule.kind === "daily" ? initial.schedule.times : ["08:00"]);
   const [days, setDays] = useState<number[]>(initial?.schedule.kind === "weekly" ? initial.schedule.days : [1]);
   const [weeklyTime, setWeeklyTime] = useState(initial?.schedule.kind === "weekly" ? initial.schedule.time : "10:00");
