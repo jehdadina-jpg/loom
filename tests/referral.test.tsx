@@ -8,6 +8,8 @@ import { ReferralSummary } from "../src/components/referral/ReferralSummary";
 import { REFERRAL_FOOTER, referralText, type ReferralData } from "../src/game/referral/referral";
 import { computeTrajectory } from "../src/game/trajectory/trajectory";
 import { computeRhythm } from "../src/game/rhythm/rhythm";
+import { computeHelpShape } from "../src/game/trajectory/helpShape";
+import { computeSteadiness } from "../src/game/trajectory/steadiness";
 import { sampleVillage } from "../src/health-worker/sampleVillage";
 
 const NOW = new Date(2026, 8, 17, 15, 0).getTime();
@@ -22,6 +24,8 @@ function data(overrides: Partial<ReferralData> = {}): ReferralData {
     rudas: [{ date: NOW - 3 * 86_400_000, total: 21, administeredBy: "Rupa Das (ASHA)" }],
     trajectory: computeTrajectory(village[0].events, NOW),
     rhythm: computeRhythm(village[0].events, NOW),
+    helpShape: computeHelpShape(village[0].events, NOW),
+    steadiness: computeSteadiness(village[0].events, NOW),
     words,
     homeNotes: "Left the gas on twice this week.",
     moodComparison: null,
@@ -45,11 +49,11 @@ describe("referral summary", () => {
     );
   });
 
-  it("draws five domain charts, each with a text alternative", () => {
+  it("draws at least the five domain charts, every chart with a text alternative", () => {
     const html = renderToStaticMarkup(<ReferralSummary data={data()} />);
     const charts = html.match(/<svg[^>]*role="img"[^>]*aria-label="[^"]+"/g) ?? [];
-    expect(charts).toHaveLength(5);
-    expect(html.match(/<title>/g)?.length).toBe(5);
+    expect(charts.length).toBeGreaterThanOrEqual(5);
+    expect(html.match(/<title>/g)?.length).toBe(charts.length);
   });
 
   it("never includes family notes in the health worker's copy", () => {

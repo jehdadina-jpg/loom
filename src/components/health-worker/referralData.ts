@@ -1,6 +1,8 @@
 import type { ReferralData } from "../../game/referral/referral";
 import { personWords } from "../../game/profiles/words";
 import { computeRhythm } from "../../game/rhythm/rhythm";
+import { computeHelpShape } from "../../game/trajectory/helpShape";
+import { computeSteadiness } from "../../game/trajectory/steadiness";
 import type { TriageRow } from "../../health-worker/village";
 
 /**
@@ -23,6 +25,8 @@ export function healthWorkerReferral(row: TriageRow): ReferralData {
     rudas,
     trajectory: row.trajectory,
     rhythm: computeRhythm(events),
+    helpShape: computeHelpShape(events),
+    steadiness: computeSteadiness(events),
     words: personWords(person),
     homeNotes: null,
     moodComparison: null,

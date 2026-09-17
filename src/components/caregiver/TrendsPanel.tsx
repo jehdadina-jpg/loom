@@ -10,6 +10,10 @@ import { readRecordEvents } from "../../health-worker/boundary";
 import { usePersistentState } from "../../game/state/usePersistentState";
 import { MOOD_KEY, EMPTY_MOOD, moodVsMeasured, type MoodState } from "../../game/mood/mood";
 import { MoodTrajectoryChart } from "./MoodTrajectoryChart";
+import { computeHelpShape } from "../../game/trajectory/helpShape";
+import { computeSteadiness } from "../../game/trajectory/steadiness";
+import { HelpShapeChart } from "../charts/HelpShapeChart";
+import { SteadinessChart } from "../charts/SteadinessChart";
 
 const DIRECTION_STYLE: Record<TrendFlag["direction"], { dot: string; badge: string; word: string }> = {
   improving: { dot: "bg-[var(--good)]", badge: "bg-[var(--good-soft)] text-[var(--good-ink)] border-[var(--good)]", word: "improving" },
@@ -58,13 +62,13 @@ export function TrendsPanel() {
   const watching = flags.filter((f) => f.direction === "worth-watching");
   const [mood] = usePersistentState<MoodState>(MOOD_KEY, EMPTY_MOOD);
   const comparison = useMemo(() => moodVsMeasured(mood, trajectory), [mood, trajectory]);
+  const hwEvents = useMemo(() => readRecordEvents(localStorage, activeId), [activeId, events]);
   const activities = useMemo(
-    () =>
-      readRecordEvents(localStorage, activeId)
-        .filter((e): e is Extract<typeof e, { kind: "activity" }> => e.kind === "activity")
-        .map((a) => ({ t: a.t, cue: a.cue })),
-    [activeId, events],
+    () => hwEvents.filter((e): e is Extract<typeof e, { kind: "activity" }> => e.kind === "activity").map((a) => ({ t: a.t, cue: a.cue })),
+    [hwEvents],
   );
+  const helpShape = useMemo(() => computeHelpShape(hwEvents), [hwEvents]);
+  const steadiness = useMemo(() => computeSteadiness(hwEvents), [hwEvents]);
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
@@ -122,6 +126,26 @@ export function TrendsPanel() {
                 );
               })}
             </ul>
+          </section>
+
+          <section className="mb-8 rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-6">
+            <h2 className="mb-1 text-lg font-semibold text-[var(--ink)]">Help Shape</h2>
+            <p className="mb-4 text-sm text-[var(--ink-soft)]">
+              The average hides what kind of help is actually needed. This shows the shape behind it, domain by domain.
+            </p>
+            <HelpShapeChart shapes={helpShape.shapes} headline={helpShape.headline} />
+          </section>
+
+          <section className="mb-8 rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-6">
+            <h2 className="mb-1 text-lg font-semibold text-[var(--ink)]">Steadiness</h2>
+            <p className="mb-4 text-sm text-[var(--ink-soft)]">
+              How different her days are from each other, week by week — a pattern an average alone can hide.
+            </p>
+            {steadiness.state === "not-enough" ? (
+              <p className="text-[var(--ink)]">Not enough history yet to compare her steadiness across two months.</p>
+            ) : (
+              <SteadinessChart weeks={steadiness.weeks} sentence={steadiness.sentence} />
+            )}
           </section>
 
           <section className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-6">

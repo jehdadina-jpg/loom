@@ -8,6 +8,8 @@ import type { RudasRecord } from "../clinical/rudas";
 import { formatDay, PATTERN_WORDS, trajectorySentence, type Trajectory, type Words } from "../trajectory/trajectory";
 import type { RhythmResult } from "../rhythm/rhythm";
 import type { MoodComparison } from "../mood/mood";
+import type { DomainShape } from "../trajectory/helpShape";
+import type { Steadiness } from "../trajectory/steadiness";
 
 export const REFERRAL_FOOTER =
   "LOOM does not diagnose. This is a record of observed change over time, to support a clinical conversation.";
@@ -21,6 +23,10 @@ export interface ReferralData {
   trajectory: Trajectory;
   /** Same activity record as the trajectory, used only for the time-of-day pattern. */
   rhythm: RhythmResult;
+  /** The cue-level distribution behind the average, domain by domain. */
+  helpShape: { shapes: DomainShape[]; headline: string };
+  /** Day-to-day variance over time, compared only with this person's own earlier weeks. */
+  steadiness: Steadiness;
   words: Words;
   homeNotes: string | null;
   /** Family-only, like homeNotes: how the caregiver's own sense of things compares with what's measured. */
@@ -73,6 +79,17 @@ export function referralText(d: ReferralData): string {
     lines.push(`  Not yet available — ${d.rhythm.sessionsSoFar} of ${d.rhythm.sessionsNeeded} sessions so far.`);
   } else {
     lines.push(`  ${d.rhythm.sentence}`);
+  }
+  if (d.trajectory.state === "ready") {
+    lines.push("");
+    lines.push("Help shape (cue-level distribution, last three weeks)");
+    lines.push(`  ${d.helpShape.headline}`);
+    for (const s of d.helpShape.shapes) {
+      if (s.sentence) lines.push(`  ${DOMAIN_NAMES[s.domain]}: ${s.sentence}`);
+    }
+    lines.push("");
+    lines.push("Steadiness (day-to-day variance over time)");
+    lines.push(d.steadiness.state === "ready" ? `  ${d.steadiness.sentence}` : "  Not enough history yet to compare across two months.");
   }
   if (d.audience === "family") {
     lines.push("");

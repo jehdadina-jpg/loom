@@ -6,6 +6,8 @@ import { RUDAS_KEY, type RudasRecord } from "../clinical/rudas";
 import { readRecordEvents } from "../../health-worker/boundary";
 import { computeTrajectory } from "../trajectory/trajectory";
 import { computeRhythm } from "../rhythm/rhythm";
+import { computeHelpShape } from "../trajectory/helpShape";
+import { computeSteadiness } from "../trajectory/steadiness";
 import { moodVsMeasured } from "../mood/mood";
 import { MOOD_KEY, EMPTY_MOOD, type MoodState } from "../mood/mood";
 import type { ReferralData } from "./referral";
@@ -31,6 +33,8 @@ export function useFamilyReferral(): () => ReferralData {
       rudas: [...rudas].sort((a, b) => b.date - a.date).map(({ date, total, administeredBy }) => ({ date, total, administeredBy })),
       trajectory,
       rhythm: computeRhythm(events),
+      helpShape: computeHelpShape(events),
+      steadiness: computeSteadiness(events),
       words: personWords(active.person),
       homeNotes: active.notes || null,
       moodComparison: moodVsMeasured(mood, trajectory),

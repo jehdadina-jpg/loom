@@ -5,6 +5,8 @@
  */
 import { DomainCharts } from "../charts/DomainCharts";
 import { RhythmHeatmap } from "../charts/RhythmHeatmap";
+import { HelpShapeChart } from "../charts/HelpShapeChart";
+import { SteadinessChart } from "../charts/SteadinessChart";
 import { observation, REFERRAL_FOOTER, usingFor, type ReferralData } from "../../game/referral/referral";
 
 export const REFERRAL_CSS = `
@@ -31,7 +33,7 @@ export const REFERRAL_CSS = `
 const longDate = (t: number) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
 
 export function ReferralSummary({ data }: { data: ReferralData }) {
-  const { person, rudas, trajectory, rhythm, words, audience } = data;
+  const { person, rudas, trajectory, rhythm, helpShape, steadiness, words, audience } = data;
   return (
     <article className="loom-referral">
       <header>
@@ -107,6 +109,24 @@ export function ReferralSummary({ data }: { data: ReferralData }) {
           </>
         )}
       </section>
+
+      {trajectory.state === "ready" && (
+        <section>
+          <h2>Help shape (last three weeks)</h2>
+          <HelpShapeChart shapes={helpShape.shapes} headline={helpShape.headline} />
+        </section>
+      )}
+
+      {trajectory.state === "ready" && (
+        <section>
+          <h2>Steadiness</h2>
+          {steadiness.state === "ready" ? (
+            <SteadinessChart weeks={steadiness.weeks} sentence={steadiness.sentence} />
+          ) : (
+            <p>Not enough history yet to compare her steadiness across two months.</p>
+          )}
+        </section>
+      )}
 
       {audience === "family" && (
         <section>
