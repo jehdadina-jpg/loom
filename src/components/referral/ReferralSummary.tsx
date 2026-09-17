@@ -4,6 +4,7 @@
  * app contexts. A doctor needs a browser, nothing else.
  */
 import { DomainCharts } from "../charts/DomainCharts";
+import { RhythmHeatmap } from "../charts/RhythmHeatmap";
 import { observation, REFERRAL_FOOTER, usingFor, type ReferralData } from "../../game/referral/referral";
 
 export const REFERRAL_CSS = `
@@ -30,7 +31,7 @@ export const REFERRAL_CSS = `
 const longDate = (t: number) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
 
 export function ReferralSummary({ data }: { data: ReferralData }) {
-  const { person, rudas, trajectory, words, audience } = data;
+  const { person, rudas, trajectory, rhythm, words, audience } = data;
   return (
     <article className="loom-referral">
       <header>
@@ -93,10 +94,30 @@ export function ReferralSummary({ data }: { data: ReferralData }) {
         <DomainCharts trajectory={trajectory} words={words} compact now={data.generatedAt} />
       </section>
 
+      <section>
+        <h2>Time of day</h2>
+        {rhythm.state === "getting-to-know" ? (
+          <p>Not yet available — {rhythm.sessionsSoFar} of {rhythm.sessionsNeeded} sessions so far.</p>
+        ) : (
+          <>
+            <p className="observation">{rhythm.sentence}</p>
+            <div style={{ marginTop: 10 }}>
+              <RhythmHeatmap rhythm={rhythm} compact />
+            </div>
+          </>
+        )}
+      </section>
+
       {audience === "family" && (
         <section>
           <h2>Noticed at home</h2>
           {data.homeNotes?.trim() ? <p className="notes">{data.homeNotes.trim()}</p> : <p>No notes recorded by the family.</p>}
+          {data.moodComparison && (
+            <>
+              <p style={{ marginTop: 10, fontWeight: 600 }}>The caregiver's own sense of how things have been</p>
+              <p className="observation">{data.moodComparison.sentence}</p>
+            </>
+          )}
         </section>
       )}
 

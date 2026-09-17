@@ -18,6 +18,8 @@ import { PLACE_NAMES } from "../../data/places";
 import { StartSessionButton } from "./SessionStarter";
 import { RemindersPanel } from "./RemindersPanel";
 import { PreservedPanel } from "./PreservedPanel";
+import { MoodPrompt } from "./MoodPrompt";
+import { TalkAboutPanel } from "./TalkAboutPanel";
 import { Drawer } from "../shared/Drawer";
 
 const DAY = 86_400_000;
@@ -151,6 +153,8 @@ export function TodayScreen({
           this ordering is the product statement that this one leads with what's preserved. */}
       <PreservedPanel />
 
+      <MoodPrompt />
+
       <section className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-6 sm:p-8">
         <p className="text-lg text-[var(--ink-soft)]">{greeting(new Date(now))}</p>
         <h1 className="mt-1 text-2xl font-semibold leading-snug text-[var(--ink)]">{opening}</h1>
@@ -210,9 +214,7 @@ export function TodayScreen({
         </Card>
       </div>
 
-      <Card title="Things to talk about" lead="Coming soon.">
-        <p className="text-base text-[var(--ink-soft)]">Conversation starters from today's sessions — the places visited and the things named.</p>
-      </Card>
+      <TalkAboutPanel />
 
       <Card title="This week" lead={WEEK_LEAD[word].replace("{object}", w.object)}>
         <div className="flex flex-wrap items-center gap-4">

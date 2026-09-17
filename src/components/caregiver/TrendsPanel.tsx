@@ -6,6 +6,10 @@ import { useProfile } from "../../game/profiles/ProfileContext";
 import { personWords } from "../../game/profiles/words";
 import { trajectorySentence } from "../../game/trajectory/trajectory";
 import { StillGettingToKnow } from "../charts/DomainCharts";
+import { readRecordEvents } from "../../health-worker/boundary";
+import { usePersistentState } from "../../game/state/usePersistentState";
+import { MOOD_KEY, EMPTY_MOOD, moodVsMeasured, type MoodState } from "../../game/mood/mood";
+import { MoodTrajectoryChart } from "./MoodTrajectoryChart";
 
 const DIRECTION_STYLE: Record<TrendFlag["direction"], { dot: string; badge: string; word: string }> = {
   improving: { dot: "bg-[var(--good)]", badge: "bg-[var(--good-soft)] text-[var(--good-ink)] border-[var(--good)]", word: "improving" },
@@ -46,12 +50,21 @@ function DayByDay({ history }: { history: DaySummary[] }) {
 export function TrendsPanel() {
   const { events } = useTelemetry();
   const { trajectory } = useAlerts();
-  const { active } = useProfile();
+  const { active, activeId } = useProfile();
   const words = personWords(active.person);
   const history = useMemo(() => sessionHistory(events), [events]);
   const flags = useMemo(() => computeTrendFlags(history), [history]);
   const ready = trajectory.state === "ready";
   const watching = flags.filter((f) => f.direction === "worth-watching");
+  const [mood] = usePersistentState<MoodState>(MOOD_KEY, EMPTY_MOOD);
+  const comparison = useMemo(() => moodVsMeasured(mood, trajectory), [mood, trajectory]);
+  const activities = useMemo(
+    () =>
+      readRecordEvents(localStorage, activeId)
+        .filter((e): e is Extract<typeof e, { kind: "activity" }> => e.kind === "activity")
+        .map((a) => ({ t: a.t, cue: a.cue })),
+    [activeId, events],
+  );
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
@@ -73,6 +86,16 @@ export function TrendsPanel() {
         <StillGettingToKnow trajectory={trajectory} words={words} />
       ) : (
         <>
+          <section className="mb-8 rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-6">
+            <h2 className="mb-1 text-lg font-semibold text-[var(--ink)]">The trend, and how it's felt to you</h2>
+            {!comparison && (
+              <p className="mb-4 text-[var(--ink)]">
+                Once there are a few of your own "how did that feel?" answers, this compares them with what's measured.
+              </p>
+            )}
+            <MoodTrajectoryChart trajectory={trajectory} activities={activities} moodEntries={mood.entries} comparison={comparison} />
+          </section>
+
           <section className="mb-8 rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-6">
             <h2 className="mb-1 text-lg font-semibold text-[var(--ink)]">What's changed recently</h2>
             <p className="mb-4 text-[var(--ink)]">

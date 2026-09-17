@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { ReferralSummary } from "../src/components/referral/ReferralSummary";
 import { REFERRAL_FOOTER, referralText, type ReferralData } from "../src/game/referral/referral";
 import { computeTrajectory } from "../src/game/trajectory/trajectory";
+import { computeRhythm } from "../src/game/rhythm/rhythm";
 import { sampleVillage } from "../src/health-worker/sampleVillage";
 
 const NOW = new Date(2026, 8, 17, 15, 0).getTime();
@@ -20,8 +21,10 @@ function data(overrides: Partial<ReferralData> = {}): ReferralData {
     person: { fullName: "Kamala Devi", age: 72, usingSince: NOW - 56 * 86_400_000 },
     rudas: [{ date: NOW - 3 * 86_400_000, total: 21, administeredBy: "Rupa Das (ASHA)" }],
     trajectory: computeTrajectory(village[0].events, NOW),
+    rhythm: computeRhythm(village[0].events, NOW),
     words,
     homeNotes: "Left the gas on twice this week.",
+    moodComparison: null,
     ...overrides,
   };
 }

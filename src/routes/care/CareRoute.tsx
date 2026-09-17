@@ -7,6 +7,7 @@ import { CommunityPackPanel } from "../../components/caregiver/CommunityPackPane
 import { PhotosPanel } from "../../components/caregiver/PhotosPanel";
 import { PeoplePanel } from "../../components/caregiver/PeoplePanel";
 import { TrendsPanel } from "../../components/caregiver/TrendsPanel";
+import { RhythmPanel } from "../../components/caregiver/RhythmPanel";
 import { AlertsPanel } from "../../components/caregiver/AlertsPanel";
 import { RudasPanel } from "../../components/caregiver/RudasPanel";
 import { HowAreYouPanel } from "../../components/caregiver/HowAreYouPanel";
@@ -36,6 +37,7 @@ const SEGMENTS = {
   ],
   progress: [
     { id: "trends", label: "Trends" },
+    { id: "rhythm", label: "Time of day" },
     { id: "assessments", label: "Assessments" },
   ],
   setup: [
@@ -204,6 +206,7 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
         {nav.tab === "progress" && (
           <Segmented tab="progress" value={segment("progress")} onChange={setSegment}>
             {segment("progress") === "trends" && <TrendsPanel />}
+            {segment("progress") === "rhythm" && <RhythmPanel />}
             {segment("progress") === "assessments" && <RudasPanel />}
           </Segmented>
         )}

@@ -6,19 +6,25 @@
 import { DOMAIN_NAMES } from "../../data/domains";
 import type { RudasRecord } from "../clinical/rudas";
 import { formatDay, PATTERN_WORDS, trajectorySentence, type Trajectory, type Words } from "../trajectory/trajectory";
+import type { RhythmResult } from "../rhythm/rhythm";
+import type { MoodComparison } from "../mood/mood";
 
 export const REFERRAL_FOOTER =
   "LOOM does not diagnose. This is a record of observed change over time, to support a clinical conversation.";
 
 export interface ReferralData {
-  /** The family's copy may include home notes; the health worker's never does. */
+  /** The family's copy may include home notes and the caregiver's own read; the health worker's copy never does. */
   audience: "family" | "health-worker";
   generatedAt: number;
   person: { fullName: string; age: number | null; usingSince: number | null };
   rudas: Pick<RudasRecord, "date" | "total" | "administeredBy">[];
   trajectory: Trajectory;
+  /** Same activity record as the trajectory, used only for the time-of-day pattern. */
+  rhythm: RhythmResult;
   words: Words;
   homeNotes: string | null;
+  /** Family-only, like homeNotes: how the caregiver's own sense of things compares with what's measured. */
+  moodComparison: MoodComparison | null;
 }
 
 export function observation(d: ReferralData): string {
@@ -61,10 +67,22 @@ export function referralText(d: ReferralData): string {
       lines.push(`  ${DOMAIN_NAMES[dom.domain]}: ${PATTERN_WORDS[dom.pattern]}${since}`);
     }
   }
+  lines.push("");
+  lines.push("Time of day");
+  if (d.rhythm.state === "getting-to-know") {
+    lines.push(`  Not yet available — ${d.rhythm.sessionsSoFar} of ${d.rhythm.sessionsNeeded} sessions so far.`);
+  } else {
+    lines.push(`  ${d.rhythm.sentence}`);
+  }
   if (d.audience === "family") {
     lines.push("");
     lines.push("Noticed at home");
     lines.push(d.homeNotes?.trim() ? d.homeNotes.trim().replace(/^/gm, "  ") : "  No notes recorded.");
+    if (d.moodComparison) {
+      lines.push("");
+      lines.push("The caregiver's own sense of how things have been, alongside what's measured");
+      lines.push(`  ${d.moodComparison.sentence}`);
+    }
   }
   lines.push("");
   lines.push(REFERRAL_FOOTER);
