@@ -17,6 +17,7 @@ import { locationForActivity } from "../../data/activities";
 import { PLACE_NAMES } from "../../data/places";
 import { StartSessionButton } from "./SessionStarter";
 import { RemindersPanel } from "./RemindersPanel";
+import { PreservedPanel } from "./PreservedPanel";
 import { Drawer } from "../shared/Drawer";
 
 const DAY = 86_400_000;
@@ -146,6 +147,10 @@ export function TodayScreen({
 
   return (
     <div className="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:px-6 sm:py-8">
+      {/* Leads the page, above today's session. Every dementia product shows decline;
+          this ordering is the product statement that this one leads with what's preserved. */}
+      <PreservedPanel />
+
       <section className="rounded-[6px] border-2 border-[var(--parchment2)] bg-[var(--parchment)] p-6 sm:p-8">
         <p className="text-lg text-[var(--ink-soft)]">{greeting(new Date(now))}</p>
         <h1 className="mt-1 text-2xl font-semibold leading-snug text-[var(--ink)]">{opening}</h1>
@@ -204,20 +209,6 @@ export function TodayScreen({
           )}
         </Card>
       </div>
-
-      <Card
-        title={`What ${w.subject === w.name ? cap(w.name) : w.subject} can still do`}
-        lead="Coming soon."
-        action={
-          <button disabled aria-disabled className="rounded-[6px] border-2 border-[var(--parchment2)] px-3 py-1 text-sm text-[var(--ink-soft)] opacity-60" title="Coming soon">
-            Share
-          </button>
-        }
-      >
-        <p className="text-base text-[var(--ink-soft)]">
-          The things {w.name} still does well, gathered from {w.possessive} own sessions — something to share with the family.
-        </p>
-      </Card>
 
       <Card title="Things to talk about" lead="Coming soon.">
         <p className="text-base text-[var(--ink-soft)]">Conversation starters from today's sessions — the places visited and the things named.</p>
