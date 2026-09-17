@@ -7,6 +7,7 @@ import { CommunityPackPanel } from "../../components/caregiver/CommunityPackPane
 import { PhotosPanel } from "../../components/caregiver/PhotosPanel";
 import { PeoplePanel } from "../../components/caregiver/PeoplePanel";
 import { VaultEngagementPanel } from "../../components/caregiver/VaultEngagementPanel";
+import { HandoverCard } from "../../components/caregiver/HandoverCard";
 import { TrendsPanel } from "../../components/caregiver/TrendsPanel";
 import { RhythmPanel } from "../../components/caregiver/RhythmPanel";
 import { AlertsPanel } from "../../components/caregiver/AlertsPanel";
@@ -108,6 +109,7 @@ function Icon({ tab }: { tab: TabId }) {
 export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowHealthWorkerView }: CareRouteProps) {
   const [nav, setNav] = useState(readNav);
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [handoverOpen, setHandoverOpen] = useState(false);
   const { open } = useAlerts();
   const { active } = useProfile();
   const possessive = personWords(active.person).possessive;
@@ -171,6 +173,12 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
           </nav>
 
           <div className="order-2 ml-auto flex flex-wrap items-center justify-end gap-2 lg:order-3">
+            <button
+              onClick={() => setHandoverOpen(true)}
+              className="rounded-[6px] border-2 border-[var(--ink-soft)] bg-[var(--parchment)] px-3 py-2 text-base font-medium text-[var(--ink)] hover:bg-[var(--parchment2)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]"
+            >
+              Handover card
+            </button>
             <button
               onClick={() => setAlertsOpen(true)}
               aria-haspopup="dialog"
@@ -275,6 +283,8 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
           <AlertsPanel />
         </Drawer>
       )}
+
+      {handoverOpen && <HandoverCard onClose={() => setHandoverOpen(false)} />}
     </div>
   );
 }

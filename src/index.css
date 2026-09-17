@@ -162,6 +162,22 @@ canvas.pixel-canvas {
   }
 }
 
+/* Handover card: same treatment as the referral summary — printing shows only the card. */
+@media print {
+  body.printing-handover > #root {
+    display: none !important;
+  }
+  body.printing-handover {
+    background: #fff !important;
+    overflow: visible !important;
+  }
+  body.printing-handover .handover-print-root {
+    position: static !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+}
+
 /* Console accents. Caregiver: warm gold. Health worker: indigo — deliberately unlike
    the caregiver console and unlike every triage colour. */
 :root,
