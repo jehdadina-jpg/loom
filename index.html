@@ -18,6 +18,11 @@
       pointer-events: none; opacity: 0; transition: opacity 140ms ease;
     }
     #interaction-prompt.visible { opacity: 1; }
+    #journey-prompt { position: fixed; z-index: 4; left: 50%; bottom: 22px; transform: translateX(-50%); padding: 9px 14px; color: #fff5cd; background: rgba(32,53,52,.92); border: 2px solid #f1d47d; font: 13px ui-monospace, monospace; opacity: 0; transition: opacity 180ms ease; pointer-events: none; }
+    #journey-prompt.visible { opacity: 1; }
+    #ambient-choice { position: fixed; z-index: 14; left: 50%; top: 50%; transform: translate(-50%,-50%); width: min(280px, calc(100vw - 40px)); padding: 18px; color: #fff8dc; background: #2c4844; border: 2px solid #f6dfa1; border-radius: 12px; text-align: center; box-shadow: 4px 5px 0 rgba(20,20,20,.3); display: none; }
+    #ambient-choice.visible { display: block; }
+    #ambient-choice button { margin: 12px 4px 0; padding: 8px 14px; border: 2px solid #f2d17c; background: #80503b; color: #fff8dc; font: 13px ui-monospace, monospace; cursor: pointer; }
     #stall-overlay { position: fixed; inset: 0; z-index: 5; display: none; pointer-events: none; }
     #stall-overlay.active { display: block; }
     .paper-list { position: absolute; right: 24px; top: 92px; width: 245px; padding: 23px 20px 19px; color: #432c1d; background: #fff2cf; clip-path: polygon(2% 1%, 98% 0, 100% 8%, 98% 97%, 88% 100%, 76% 98%, 64% 100%, 49% 98%, 34% 100%, 17% 98%, 2% 100%, 0 89%, 2% 72%, 0 58%, 2% 41%, 0 22%); box-shadow: 4px 6px 0 rgba(42,25,18,.28); transform: rotate(1deg); pointer-events: auto; }
@@ -51,6 +56,8 @@
 <body>
   <div id="game"></div>
   <div id="interaction-prompt" role="status">Press <strong>E</strong> to interact</div>
+  <div id="journey-prompt">→ Walk to the right to find the park</div>
+  <div id="ambient-choice" role="dialog"></div>
   <div id="stall-overlay" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
@@ -58,6 +65,28 @@
   <script>
     (() => {
       const WORLD_WIDTH = 2048, WORLD_HEIGHT = 768;
+
+      function createPlayer(scene, x, y) {
+        const player = scene.physics.add.sprite(x, y, 'player-sprite', 0);
+        player.setDisplaySize(62, 90).setDepth(5).setCollideWorldBounds(true);
+        player.body.setSize(34, 24).setOffset(27, 96);
+        scene.cursors = scene.input.keyboard.createCursorKeys();
+        scene.wasd = scene.input.keyboard.addKeys('W,A,S,D');
+        return player;
+      }
+      function updatePlayerMovement(scene) {
+        const up = scene.cursors.up.isDown || scene.wasd.W.isDown;
+        const down = scene.cursors.down.isDown || scene.wasd.S.isDown;
+        const left = scene.cursors.left.isDown || scene.wasd.A.isDown;
+        const right = scene.cursors.right.isDown || scene.wasd.D.isDown;
+        const speed = 130;
+        scene.player.setVelocity(0, 0);
+        if (up) scene.player.setVelocityY(-speed).setFlipX(false).anims.stop().setFrame(0);
+        else if (down) scene.player.setVelocityY(speed).setFlipX(false).play('walk-down', true);
+        else if (left) scene.player.setVelocityX(-speed).setFlipX(false).play('walk-side', true);
+        else if (right) scene.player.setVelocityX(speed).setFlipX(true).play('walk-side', true);
+        else scene.player.anims.stop();
+      }
 
       class MarketStreet extends Phaser.Scene {
         constructor() { super('market-street'); }
@@ -82,11 +111,7 @@
           this.anims.create({ key: 'walk-down', frames: [1, 2, 3].map(frame => ({ key: 'player-sprite', frame })), frameRate: 6, repeat: -1 });
           this.anims.create({ key: 'walk-side', frames: [4, 5, 6, 7].map(frame => ({ key: 'player-sprite', frame })), frameRate: 8, repeat: -1 });
 
-          this.player = this.physics.add.sprite(1040, 560, 'player-sprite', 0);
-          this.player.setDisplaySize(62, 90).setDepth(5).setCollideWorldBounds(true);
-          this.player.body.setSize(34, 24).setOffset(27, 96);
-          this.cursors = this.input.keyboard.createCursorKeys();
-          this.wasd = this.input.keyboard.addKeys('W,A,S,D');
+          this.player = createPlayer(this, 1040, 560);
           this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
           this.input.keyboard.on('keydown-P', () => alert('Progress tracking will be added with the task flow.'));
 
@@ -183,32 +208,32 @@
           });
           this.cameras.main.fadeOut(400, 19, 35, 40);
         }
+        showParkGuide() {
+          this.parkGuideActive = true;
+          document.getElementById('journey-prompt').classList.add('visible');
+          this.cameras.main.startFollow(this.player, true, .08, .08);
+        }
+        enterPark() {
+          if (this.transitioning) return;
+          this.transitioning = true;
+          this.player.setVelocity(0, 0);
+          this.interactionPrompt.classList.remove('visible');
+          document.getElementById('journey-prompt').classList.remove('visible');
+          this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.stop();
+            this.scene.start('park-scene');
+          });
+          this.cameras.main.fadeOut(500, 0, 0, 0);
+        }
         update() {
           if (this.transitioning) {
             this.player.setVelocity(0, 0);
             return;
           }
-          const up = this.cursors.up.isDown || this.wasd.W.isDown;
-          const down = this.cursors.down.isDown || this.wasd.S.isDown;
-          const left = this.cursors.left.isDown || this.wasd.A.isDown;
-          const right = this.cursors.right.isDown || this.wasd.D.isDown;
-          const speed = 130;
-          this.player.setVelocity(0, 0);
-
-          if (up) {
-            this.player.setVelocityY(-speed).setFlipX(false).anims.stop();
-            this.player.setFrame(0);
-          } else if (down) {
-            this.player.setVelocityY(speed).setFlipX(false).play('walk-down', true);
-          } else if (left) {
-            this.player.setVelocityX(-speed).setFlipX(false).play('walk-side', true);
-          } else if (right) {
-            this.player.setVelocityX(speed).setFlipX(true).play('walk-side', true);
-          } else {
-            this.player.anims.stop();
-          }
+          updatePlayerMovement(this);
           this.updateInteractionPrompt();
           if (this.isNearShopkeeper() && Phaser.Input.Keyboard.JustDown(this.interactKey)) this.enterFruitStall();
+          if (this.parkGuideActive && this.player.x >= 1900) this.enterPark();
         }
       }
 
@@ -458,6 +483,7 @@
             const world = this.scene.get(this.returnScene);
             world.transitioning = false;
             world.scene.resume();
+            if (completed) world.showParkGuide();
             world.cameras.main.fadeIn(400, 19, 35, 40);
             this.scene.stop();
           });
@@ -465,7 +491,151 @@
         }
       }
 
-      new Phaser.Game({ type: Phaser.AUTO, parent: 'game', width: WORLD_WIDTH, height: WORLD_HEIGHT, backgroundColor: '#152832', physics: { default: 'arcade' }, scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH }, scene: [MarketStreet, FruitStall] });
+      class ParkScene extends Phaser.Scene {
+        constructor() { super('park-scene'); }
+        preload() {
+          const assetPath = window.location.protocol === 'file:' ? 'public/' : '/';
+          this.load.image('park-background', assetPath + 'park.png');
+          this.load.image('park-fountain-sheet', assetPath + 'fountain.png');
+          this.load.image('park-cat-1-sheet', assetPath + 'cat1sprite.png');
+          this.load.image('park-cat-3-sheet', assetPath + 'cat3sprite.png');
+          this.load.image('park-toad-sheet', assetPath + 'toadsprite.png');
+        }
+        create() {
+          const parkTexture = this.textures.get('park-background').getSourceImage();
+          this.parkWidth = parkTexture.width;
+          this.parkHeight = parkTexture.height;
+          this.add.image(0, 0, 'park-background').setOrigin(0, 0);
+          this.makeParkSpriteSheets();
+          this.addParkLife();
+          this.physics.world.setBounds(0, 0, this.parkWidth, this.parkHeight);
+          this.cameras.main.setBounds(0, 0, this.parkWidth, this.parkHeight).setZoom(2);
+          this.player = createPlayer(this, 70, this.parkHeight - 130);
+          this.cameras.main.startFollow(this.player, true, .09, .09);
+          this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+          this.interactionPrompt = document.getElementById('interaction-prompt');
+          this.choiceOverlay = document.getElementById('ambient-choice');
+          this.ambientObjects = [];
+          this.addAmbientObject('cat', 'cat-garden', 275, 282, '🐈');
+          this.addAmbientObject('cat', 'cat-lookout', 1100, 175, '🐈');
+          this.addAmbientObject('cat', 'cat-lake', 920, 610, '🐈');
+          this.addAmbientObject('plant', 'plant-fern', 445, 592, '🌿');
+          this.addAmbientObject('plant', 'plant-grove', 680, 235, '🌱');
+          this.addAmbientObject('plant', 'plant-path', 1240, 515, '🌿');
+          this.events.once('shutdown', () => { this.interactionPrompt.classList.remove('visible'); this.choiceOverlay.classList.remove('visible'); });
+          this.cameras.main.fadeIn(500, 0, 0, 0);
+        }
+        // The supplied sheets use a pale checkerboard instead of alpha. Copy each
+        // frame to a canvas and remove only those two checker colours, keeping the
+        // existing painted park visible everywhere around each moving sprite.
+        makeKeyedSpriteSheet(textureKey, sourceKey, columns, rows) {
+          const source = this.textures.get(sourceKey).getSourceImage();
+          const frameWidth = Math.ceil(source.width / columns);
+          const frameHeight = Math.ceil(source.height / rows);
+          const frameCount = columns * rows;
+          const canvas = document.createElement('canvas');
+          canvas.width = frameWidth * frameCount;
+          canvas.height = frameHeight;
+          const context = canvas.getContext('2d', { willReadFrequently: true });
+          for (let row = 0; row < rows; row++) for (let column = 0; column < columns; column++) {
+            const index = row * columns + column;
+            const sx = Math.round(column * source.width / columns);
+            const ex = Math.round((column + 1) * source.width / columns);
+            const sy = Math.round(row * source.height / rows);
+            const ey = Math.round((row + 1) * source.height / rows);
+            context.drawImage(source, sx, sy, ex - sx, ey - sy, index * frameWidth, 0, ex - sx, ey - sy);
+          }
+          const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+          for (let i = 0; i < pixels.data.length; i += 4) {
+            const r = pixels.data[i], g = pixels.data[i + 1], b = pixels.data[i + 2];
+            if ((r === 204 && g === 204 && b === 204) || (r === 238 && g === 238 && b === 238)) pixels.data[i + 3] = 0;
+          }
+          context.putImageData(pixels, 0, 0);
+          this.textures.addSpriteSheet(textureKey, canvas, { frameWidth, frameHeight });
+        }
+        makeParkSpriteSheets() {
+          this.makeKeyedSpriteSheet('park-fountain', 'park-fountain-sheet', 5, 2);
+          this.makeKeyedSpriteSheet('park-cat-1', 'park-cat-1-sheet', 4, 1);
+          this.makeKeyedSpriteSheet('park-cat-3', 'park-cat-3-sheet', 4, 1);
+          this.makeKeyedSpriteSheet('park-toad', 'park-toad-sheet', 4, 1);
+          this.anims.create({ key: 'park-fountain-flow', frames: this.anims.generateFrameNumbers('park-fountain', { start: 0, end: 9 }), frameRate: 7, repeat: -1 });
+          this.anims.create({ key: 'park-cat-1-walk', frames: this.anims.generateFrameNumbers('park-cat-1', { start: 0, end: 3 }), frameRate: 5, repeat: -1 });
+          this.anims.create({ key: 'park-cat-3-walk', frames: this.anims.generateFrameNumbers('park-cat-3', { start: 0, end: 3 }), frameRate: 5, repeat: -1 });
+          this.anims.create({ key: 'park-toad-breathe', frames: this.anims.generateFrameNumbers('park-toad', { start: 0, end: 3 }), frameRate: 3, repeat: -1 });
+        }
+        addParkLife() {
+          // Coordinates are aligned to the fountain, cats, and toads painted into
+          // park.png. Bottom origins make their feet/rim sit on the same ground.
+          this.add.sprite(684, 514, 'park-fountain').setOrigin(.5, .99).setDepth(3).play('park-fountain-flow');
+          this.add.sprite(615, 246, 'park-cat-1').setOrigin(.5, 1).setScale(.40).setDepth(3).play('park-cat-1-walk');
+          this.add.sprite(456, 342, 'park-cat-3').setOrigin(.5, 1).setScale(.40).setDepth(3).play('park-cat-3-walk');
+          this.add.sprite(1086, 214, 'park-toad').setOrigin(.5, 1).setScale(.34).setDepth(3).play('park-toad-breathe');
+          this.add.sprite(1118, 373, 'park-toad').setOrigin(.5, 1).setScale(.34).setDepth(3).play('park-toad-breathe');
+        }
+        addAmbientObject(type, id, x, y, icon) {
+          const glowColor = type === 'cat' ? 0xffd78a : 0x7fd78a;
+          const glow = this.add.circle(x, y + 20, 28, glowColor, .17).setDepth(2);
+          this.tweens.add({ targets: glow, alpha: .35, duration: 850, yoyo: true, repeat: -1 });
+          const sprite = this.add.text(x, y, icon, { fontSize: '38px' }).setOrigin(.5).setDepth(4);
+          this.ambientObjects.push({ type, id, x, y, sprite });
+        }
+        closestObject() {
+          let closest = null, distance = Infinity;
+          this.ambientObjects.forEach(object => {
+            const current = Phaser.Math.Distance.Between(this.player.x, this.player.y, object.x, object.y);
+            if (current < 85 && current < distance) { closest = object; distance = current; }
+          });
+          return closest;
+        }
+        updatePrompt(object) {
+          this.interactionPrompt.classList.toggle('visible', Boolean(object));
+          if (!object) return;
+          this.interactionPrompt.textContent = object.type === 'cat' ? 'Press E to greet the cat' : 'Press E to water this plant';
+          const bounds = this.game.canvas.getBoundingClientRect();
+          const camera = this.cameras.main;
+          this.interactionPrompt.style.left = `${bounds.left + (object.x - camera.scrollX) * camera.zoom * bounds.width / this.scale.width}px`;
+          this.interactionPrompt.style.top = `${bounds.top + (object.y - 48 - camera.scrollY) * camera.zoom * bounds.height / this.scale.height}px`;
+        }
+        logActivity(entry) {
+          const key = 'marketStreetTaskResults';
+          const results = JSON.parse(localStorage.getItem(key) || '[]');
+          results.push({ taskName: 'park_activity', duration: 0, mistakes: 0, accuracy: 1, ...entry, timestamp: Date.now() });
+          localStorage.setItem(key, JSON.stringify(results));
+        }
+        interact(object) {
+          if (object.type === 'cat') {
+            const emote = this.add.text(object.x, object.y - 46, '♥  meow!', { fontFamily: 'monospace', fontSize: '15px', color: '#ffdb8a', stroke: '#293d3c', strokeThickness: 3 }).setOrigin(.5).setDepth(8).setAlpha(0).setScale(.7);
+            this.tweens.add({ targets: emote, alpha: 1, scale: 1, y: object.y - 76, duration: 220, yoyo: true, hold: 650, onComplete: () => emote.destroy() });
+            this.tweens.add({ targets: object.sprite, y: object.y - 9, duration: 130, yoyo: true, repeat: 1 });
+            this.logActivity({ type: 'cat', id: object.id });
+            return;
+          }
+          this.inputLocked = true;
+          this.choiceOverlay.innerHTML = `<div>Water this plant?</div><button type="button" data-water="yes">Yes</button><button type="button" data-water="no">No</button>`;
+          this.choiceOverlay.classList.add('visible');
+          this.choiceOverlay.querySelector('[data-water="yes"]').addEventListener('click', () => this.resolvePlant(object, true));
+          this.choiceOverlay.querySelector('[data-water="no"]').addEventListener('click', () => this.resolvePlant(object, false));
+        }
+        resolvePlant(object, watered) {
+          this.choiceOverlay.classList.remove('visible');
+          this.inputLocked = false;
+          if (watered) {
+            const water = this.add.text(object.x, object.y - 32, '💧', { fontSize: '25px' }).setOrigin(.5).setDepth(8);
+            this.tweens.add({ targets: water, y: object.y + 14, alpha: 0, duration: 600, onComplete: () => water.destroy() });
+            this.tweens.add({ targets: object.sprite, scale: 1.2, duration: 180, yoyo: true });
+          }
+          this.logActivity({ type: 'plant', id: object.id, wasWatered: watered });
+        }
+        update() {
+          if (this.inputLocked) { this.player.setVelocity(0, 0); return; }
+          updatePlayerMovement(this);
+          const closest = this.closestObject();
+          this.updatePrompt(closest);
+          if (closest && Phaser.Input.Keyboard.JustDown(this.interactKey)) this.interact(closest);
+        }
+      }
+
+      new Phaser.Game({ type: Phaser.AUTO, parent: 'game', width: WORLD_WIDTH, height: WORLD_HEIGHT, backgroundColor: '#152832', physics: { default: 'arcade' }, scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH }, scene: [MarketStreet, FruitStall, ParkScene] });
     })();
   </script>
 </body>
