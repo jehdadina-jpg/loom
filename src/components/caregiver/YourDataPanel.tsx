@@ -14,6 +14,8 @@ import { readRecordEvents } from "../../health-worker/boundary";
 import { eraseEverything, readAll } from "../../game/data/yourData";
 import { flushQueue } from "../../game/sync/queue";
 import { useSyncStatus } from "../../game/sync/useSyncStatus";
+import { demoInstalled, installDemo, removeDemo } from "../../game/demo/installDemo";
+import { DEMO_PERSON_NAME, DEMO_PROFILE_ID } from "../../game/demo/demoData";
 import { ARCHIVE_CSS, ArchiveDocument } from "./ArchiveDocument";
 import { field, Page, primaryBtn, secondaryBtn, Section } from "../shared/ui";
 
@@ -87,6 +89,7 @@ export function YourDataPanel({ onShowHealthWorkerView }: { onShowHealthWorkerVi
   const [confirming, setConfirming] = useState(false);
   const [typed, setTyped] = useState("");
   const [exported, setExported] = useState(false);
+  const [demoIsInstalled] = useState(demoInstalled);
   const who = active.person?.fullName.trim() || active.name;
 
   function exportEverything() {
@@ -162,6 +165,42 @@ export function YourDataPanel({ onShowHealthWorkerView }: { onShowHealthWorkerVi
           <button onClick={onShowHealthWorkerView} className={`${secondaryBtn} mt-3`}>
             See exactly what a health worker can see
           </button>
+        </Section>
+      </div>
+
+      <div className="mt-4">
+        <Section
+          title="Demonstration data"
+          lead="An invented family with two months of history behind them, for showing what this looks like in use. They are kept separate from every real record here, and can be removed again."
+        >
+          {demoIsInstalled ? (
+            <>
+              <p className="text-base text-[var(--ink)]">
+                {activeId === DEMO_PROFILE_ID
+                  ? `${DEMO_PERSON_NAME} is loaded, and is the person you are looking at now. Switch people to get back to your own records.`
+                  : `${DEMO_PERSON_NAME} is loaded, and sits alongside ${who} in the list of people.`}
+              </p>
+              <button
+                onClick={() => {
+                  removeDemo();
+                  window.location.reload();
+                }}
+                className={`${secondaryBtn} mt-3`}
+              >
+                Remove the demonstration person
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => {
+                installDemo();
+                window.location.reload();
+              }}
+              className={secondaryBtn}
+            >
+              Load the demonstration person
+            </button>
+          )}
         </Section>
       </div>
 

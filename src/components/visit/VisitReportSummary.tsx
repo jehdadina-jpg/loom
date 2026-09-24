@@ -7,7 +7,7 @@
  */
 import { DomainCharts } from "../charts/DomainCharts";
 import { askQuestions, noticedLines, type PrepAnswers } from "../../game/visit/prep";
-import { usingFor, VISIT_REPORT_FOOTER, type VisitReportData } from "../../game/visit/report";
+import { usageLine, VISIT_REPORT_FOOTER, type VisitReportData } from "../../game/visit/report";
 import { trajectorySentence } from "../../game/trajectory/trajectory";
 import { bestTimesText } from "../../game/handover/handover";
 
@@ -55,7 +55,7 @@ export function VisitReportSummary({ data }: { data: VisitReportData }) {
       <header>
         <h1>{person.fullName} — visit report</h1>
         <p className="meta">
-          {person.age !== null ? `${person.age} years old` : "Age not recorded"} · using LOOM since {usingFor(person.usingSince, data.generatedAt)} ·{" "}
+          {person.age !== null ? `${person.age} years old` : "Age not recorded"} · {usageLine(person.usingSince, data.generatedAt)} ·{" "}
           {person.sessionCount} sessions
         </p>
         <p className="meta">

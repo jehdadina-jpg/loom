@@ -68,14 +68,14 @@ function independence(cue: number): number {
   return 1 - Math.min(4, Math.max(0, cue)) / 4;
 }
 
-/** "about twice", "a little more", "close to three times" — a ratio in words, never a raw decimal. */
+/** "roughly twice the prompting", "a little more prompting" — a ratio in words, never a raw decimal. */
 function ratioWord(ratio: number): string {
-  if (ratio < 1.15) return "a little more";
-  if (ratio < 1.35) return "around a third more";
-  if (ratio < 1.75) return "around half as much again";
-  if (ratio < 2.4) return "roughly twice";
-  if (ratio < 3.4) return "roughly three times";
-  return "several times";
+  if (ratio < 1.15) return "a little more prompting";
+  if (ratio < 1.35) return "around a third more prompting";
+  if (ratio < 1.75) return "half as much prompting again";
+  if (ratio < 2.4) return "roughly twice the prompting";
+  if (ratio < 3.4) return "roughly three times the prompting";
+  return "several times the prompting";
 }
 
 /** How far back the pattern looks — long enough to be a real rhythm, not stale forever. */
@@ -146,7 +146,7 @@ export function computeRhythm(events: HealthWorkerEvent[], now = Date.now()): Rh
     const ratio = worstCue / bestCue;
     sentence =
       ratio > 1.15
-        ? `Her best hour is ${REPRESENTATIVE_TIME[best]}. ${WINDOW_LABEL[worst].split(" (")[0]}s, she needs ${ratioWord(ratio)} the prompting for the same activity.`
+        ? `Her best hour is ${REPRESENTATIVE_TIME[best]}. ${WINDOW_LABEL[worst].split(" (")[0]}s, she needs ${ratioWord(ratio)} for the same activity.`
         : `Her best hour is ${REPRESENTATIVE_TIME[best]}, with ${WINDOW_LABEL[worst].split(" (")[0].toLowerCase()}s only a little further back.`;
     actionable.push(`Good times for anything demanding: ${windowAdvice(best)}`);
     actionable.push(`Best time to book appointments: ${appointmentAdvice(best)}`);
