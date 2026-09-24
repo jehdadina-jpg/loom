@@ -38,13 +38,18 @@ export function usingFor(since: number | null, now: number): string {
   return `${Math.round(days / 30)} months`;
 }
 
+/** The header's middle clause, which has to read properly before there is any history at all. */
+export function usageLine(since: number | null, now: number): string {
+  return since ? `using LOOM for ${usingFor(since, now)}` : "not yet used";
+}
+
 const longDate = (t: number) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
 
 /** Plain-text version for pasting into a WhatsApp message. Same content, same order, same footer. */
 export function visitReportText(d: VisitReportData): string {
   const lines: string[] = [];
   lines.push(`${d.person.fullName} — visit report`);
-  lines.push(`${d.person.age !== null ? `${d.person.age} years old` : "Age not recorded"} · using LOOM since ${usingFor(d.person.usingSince, d.generatedAt)} · ${d.person.sessionCount} sessions`);
+  lines.push(`${d.person.age !== null ? `${d.person.age} years old` : "Age not recorded"} · ${usageLine(d.person.usingSince, d.generatedAt)} · ${d.person.sessionCount} sessions`);
   lines.push(`Prepared by ${d.preparedBy.name || "the family"}${d.preparedBy.relationship ? `, ${d.preparedBy.relationship}` : ""}, on ${longDate(d.generatedAt)}`);
   if (d.appointment) {
     lines.push(`Appointment: ${d.appointment.doctorName}${d.appointment.speciality ? ` (${d.appointment.speciality})` : ""}, ${longDate(d.appointment.date)}${d.appointment.place ? ` at ${d.appointment.place}` : ""}`);
