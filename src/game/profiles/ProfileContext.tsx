@@ -73,6 +73,32 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   }, [state]);
 
+  /**
+   * Who you are looking at can be changed from somewhere this provider cannot see — another
+   * tab, or a tool that writes the store directly. This provider sits above the router, so
+   * moving between the title screen and the console never remounts it: without this, a page
+   * opened before the switch would keep showing the previous person and then write that
+   * stale choice back over the new one. Every other store already re-reads on a change;
+   * this is the same courtesy for the one that decides whose records the rest of them load.
+   */
+  useEffect(() => {
+    const resync = () => {
+      const fresh = load();
+      setState((s) => (JSON.stringify(s) === JSON.stringify(fresh) ? s : fresh));
+    };
+    // fires in the *other* tabs when one of them writes
+    const onStorage = (e: StorageEvent) => {
+      if (!e.key || e.key === STORAGE_KEY) resync();
+    };
+    const onVisible = () => document.visibilityState === "visible" && resync();
+    window.addEventListener("storage", onStorage);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+
   const setActive = useCallback((id: string) => setState((s) => ({ ...s, activeId: id })), []);
 
   const addProfile = useCallback((name: string) => {
