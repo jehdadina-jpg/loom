@@ -12,13 +12,17 @@ const BLOCK = 6;
 const GAP = 2;
 const WORD = "LOOM";
 
-interface Cell {
+export interface Cell {
   x: number;
   y: number;
   up: boolean;
   down: boolean;
   left: boolean;
   right: boolean;
+}
+
+export function getLogoCells(): Cell[] {
+  return cells();
 }
 
 function cells(): Cell[] {
