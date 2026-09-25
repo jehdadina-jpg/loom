@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup } from "react-dom/server.browser";
 import { REFERRAL_CSS, ReferralSummary } from "./ReferralSummary";
 import { referralText, type ReferralData } from "../../game/referral/referral";
 

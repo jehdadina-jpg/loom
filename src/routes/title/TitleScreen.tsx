@@ -9,6 +9,7 @@ import { useSettings } from "../../game/state/SettingsContext";
 import { useSession } from "../../game/session/SessionContext";
 import { useProfile } from "../../game/profiles/ProfileContext";
 import { audioEngine } from "../../game/audio/AudioEngine";
+import { IntroTrigger } from "../../features/intro/IntroTrigger";
 
 export interface TitleScreenProps {
   onPlay: () => void;
@@ -175,6 +176,10 @@ export function TitleScreen({ onPlay, onContinue, onCaregiver, onHealthWorker }:
           >
             Carer setup
           </button>
+          <IntroTrigger
+            className="rounded-lg px-3 py-2 text-[#e2b868] transition-colors hover:text-[#ffdf9e] focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
+            style={{ background: "rgba(24,18,12,0.75)", border: "1px solid #6b4d2c", fontSize: 12.5 * ts }}
+          />
         </div>
       </div>
     </div>

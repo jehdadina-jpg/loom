@@ -19,6 +19,7 @@ import { StartSessionButton } from "../../components/caregiver/SessionStarter";
 import { useAlerts } from "../../game/alerts/AlertsContext";
 import { useProfile } from "../../game/profiles/ProfileContext";
 import { personWords } from "../../game/profiles/words";
+import { IntroTrigger } from "../../features/intro/IntroTrigger";
 
 export interface CareRouteProps {
   onBackToPlay: () => void;
@@ -255,6 +256,7 @@ export function CareRoute({ onBackToPlay, onBackToTitle, onStartSession, onShowH
       <footer className="border-t-2 border-[var(--parchment2)] bg-[var(--parchment)] pb-24 sm:pb-0">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
           <div className="ml-auto flex flex-wrap gap-2">
+            <IntroTrigger />
             <button onClick={onBackToPlay} className="rounded-[6px] px-3 py-2 text-sm text-[var(--ink-soft)] underline underline-offset-2 hover:bg-[var(--parchment2)]">
               Back to the village
             </button>

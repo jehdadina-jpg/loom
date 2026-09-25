@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup } from "react-dom/server.browser";
 import { useProfile } from "../../game/profiles/ProfileContext";
 import { useTelemetry } from "../../game/telemetry/store";
 import { useSession } from "../../game/session/SessionContext";
