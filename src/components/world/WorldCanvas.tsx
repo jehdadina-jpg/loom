@@ -33,6 +33,7 @@ export interface WorldCanvasProps {
   onBack?: () => void;
   onEasterEgg?: (egg: EasterEgg) => void;
   suggestedHotspotId?: string | null;
+  discoveredEggIds?: string[];
   textScale?: number;
   highContrast?: boolean;
   reducedMotion?: boolean;
@@ -76,6 +77,7 @@ export function WorldCanvas({
   onBack,
   onEasterEgg,
   suggestedHotspotId,
+  discoveredEggIds = [],
   textScale = 1,
   highContrast = false,
   reducedMotion = false,
@@ -308,10 +310,13 @@ export function WorldCanvas({
       if (pos.x >= egg.x && pos.x <= egg.x + egg.w && pos.y >= egg.y && pos.y <= egg.y + egg.h) {
         const bx = egg.x + egg.w / 2;
         const by = egg.y + egg.h / 2;
-        particlesRef.current.burst(egg.burst ?? "dust", bx, by, egg.burstCount ?? 10);
-        // a second, sparser burst of light dust always joins in so every find feels a
-        // little magical, not just a repeat of whatever the egg's own burst kind is
-        particlesRef.current.burst("dust", bx, by, Math.max(4, Math.round((egg.burstCount ?? 10) * 0.4)));
+        const isNew = !discoveredEggIds.includes(egg.id);
+        const burstCount = egg.burstCount ?? 10;
+        particlesRef.current.burst(egg.burst ?? "dust", bx, by, isNew ? burstCount : Math.max(3, Math.round(burstCount * 0.35)));
+        if (isNew) {
+          // A second, sparser burst of light dust makes a first discovery feel special.
+          particlesRef.current.burst("dust", bx, by, Math.max(4, Math.round(burstCount * 0.4)));
+        }
         onEasterEgg?.(egg);
         return;
       }

@@ -17,8 +17,11 @@ import { ChapterCard } from "../../components/story/ChapterCard";
 import { ReminderCard } from "../../game/reminders/ReminderCard";
 import { chapterForGuideIndex } from "../../data/story";
 import { PixelSprite } from "../../components/pixel/PixelSprite";
+import { DiscoveryBadge } from "../../components/world/DiscoveryBadge";
 import { iconSprite, type IconName } from "../../engine/sprites/icons";
 import type { TimeMode } from "../../engine/fx/DayNight";
+import { TOTAL_EASTER_EGGS } from "../../data/locations/easterEggs";
+import { GameHud } from "../../components/shared/GameHud";
 
 export interface PlayRouteProps {
   onRequestCaregiver: () => void;
@@ -135,11 +138,12 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
   }
 
   function handleEasterEgg(egg: EasterEgg) {
+    const isNew = !session.foundEggs.includes(egg.id);
     session.noteEggFound(egg.id);
-    if (egg.sound === "confirm") audioEngine.confirm();
+    if (isNew && egg.sound === "confirm") audioEngine.confirm();
     else audioEngine.tap();
-    speechEngine.speak(egg.line);
-    setToast({ id: `${egg.id}-${Date.now()}`, line: egg.line });
+    if (isNew) speechEngine.speak(egg.line);
+    setToast({ id: `${egg.id}-${Date.now()}`, line: isNew ? egg.line : "A familiar little delight, right where you left it." });
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), 3600);
   }
@@ -188,6 +192,7 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#0e1a12]">
+      <GameHud onSettings={onRequestCaregiver} textScale={settings.textScale} />
       <div
         className={`pointer-events-none absolute inset-0 z-[60] bg-black transition-opacity duration-200 ${
           wiping ? "opacity-100" : "opacity-0"
@@ -206,6 +211,7 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
         onHotspot={handleHotspot}
         onMiss={() => (missesRef.current += 1)}
         onEasterEgg={handleEasterEgg}
+        discoveredEggIds={session.foundEggs}
         onBack={scene.backTo ? () => navigateTo(scene.backTo!) : undefined}
         suggestedHotspotId={suggestedHotspotId}
         textScale={settings.textScale}
@@ -225,6 +231,10 @@ export function PlayRoute({ onRequestCaregiver }: PlayRouteProps) {
           ) : null
         }
       />
+
+      {!overlayOpen && !chapterCard && (
+        <DiscoveryBadge found={session.foundEggs.length} total={TOTAL_EASTER_EGGS} textScale={settings.textScale} />
+      )}
 
       {!scene.backTo && (
         <div

@@ -1,7 +1,7 @@
 import type { EasterEgg } from "./types";
 
 /**
- * Twenty-six hidden delights scattered through the village.
+ * Hidden delights scattered through the village.
  *
  * None of them are tasks. Nothing is scored, nothing is missed by ignoring them,
  * and none of them are ever hinted at — they exist so that idle, curious tapping

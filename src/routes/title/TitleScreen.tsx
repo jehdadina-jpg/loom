@@ -9,6 +9,7 @@ import { useSettings } from "../../game/state/SettingsContext";
 import { useSession } from "../../game/session/SessionContext";
 import { useProfile } from "../../game/profiles/ProfileContext";
 import { audioEngine } from "../../game/audio/AudioEngine";
+import { LoadingIntro } from "../../components/shared/LoadingIntro";
 
 export interface TitleScreenProps {
   onPlay: () => void;
@@ -27,6 +28,7 @@ const PLACE_NAMES: Record<string, string> = {
   community: "the community area",
   garden: "the garden",
 };
+const LOADING_LABELS = ["Packing the market stall...", "Waking the cats in the park...", "Lighting the lanterns..."];
 
 /**
  * The way in: the living village plays behind a carved wooden wordmark while every
@@ -41,6 +43,9 @@ export function TitleScreen({ onPlay, onContinue, onCaregiver, onHealthWorker }:
   const [progress, setProgress] = useState(0);
   const [label, setLabel] = useState("Waking the village");
   const [ready, setReady] = useState(false);
+  const [intro, setIntro] = useState(false);
+  const [loaderFading, setLoaderFading] = useState(false);
+  const [statusIndex, setStatusIndex] = useState(0);
 
   const pack = useMemo(() => getPack(settings.communityPackId), [settings.communityPackId]);
   const scene = useMemo(() => buildLocation("path", pack, todaySeed()), [pack]);
@@ -54,15 +59,28 @@ export function TitleScreen({ onPlay, onContinue, onCaregiver, onHealthWorker }:
     }).then(() => {
       if (!alive) return;
       setProgress(1);
-      setReady(true);
+      setLoaderFading(true);
+      window.setTimeout(() => {
+        if (!alive) return;
+        setReady(true);
+        setIntro(true);
+      }, 400);
     });
     return () => {
       alive = false;
     };
   }, []);
 
+  useEffect(() => {
+    if (ready) return;
+    const timer = window.setInterval(() => setStatusIndex((index) => (index + 1) % LOADING_LABELS.length), 1500);
+    return () => window.clearInterval(timer);
+  }, [ready]);
+
   const hasProgress = guideIndex > 0 || lastLocation !== "path";
   const ts = settings.textScale;
+
+  if (ready && intro) return <LoadingIntro onDone={onPlay} reducedMotion={settings.reducedMotion} />;
 
   function start(fn: () => void) {
     audioEngine.resume();
@@ -72,6 +90,17 @@ export function TitleScreen({ onPlay, onContinue, onCaregiver, onHealthWorker }:
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#0b140e]">
+      {!ready && (
+        <div className={`loom-loader ${loaderFading ? "is-fading" : ""}`} aria-live="polite">
+          <div className="loom-loader__map" />
+          <div className="loom-loader__box">
+            <span className="loom-loader__status">{progress > 0 ? (LOADING_LABELS[statusIndex] ?? label) : "Awaiting the Weave..."}</span>
+            <div className="loom-loader__bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+              <span style={{ width: `${Math.round(progress * 100)}%` }} />
+            </div>
+          </div>
+        </div>
+      )}
       <div className="absolute inset-0">
         <WorldCanvas
           scene={scene}
@@ -132,7 +161,7 @@ export function TitleScreen({ onPlay, onContinue, onCaregiver, onHealthWorker }:
             </div>
           ) : (
             <>
-              <TitleButton label={hasProgress ? "Continue" : "Start"} primary onClick={() => start(onPlay)} ts={ts} />
+              <TitleButton label={hasProgress ? "Continue" : "Start"} primary onClick={() => start(() => setIntro(true))} ts={ts} />
               {hasProgress && (
                 <TitleButton
                   label={`Start again at ${PLACE_NAMES.path}`}

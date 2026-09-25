@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=Press+Start+2P&display=swap");
 
 @theme {
   --font-pixel: "Press Start 2P", monospace;
@@ -136,6 +137,70 @@ canvas.pixel-canvas {
 .animate-cta-glow {
   animation: cta-glow 2.6s ease-in-out infinite;
 }
+
+/* Shared folk/parchment chrome for the prelude and the player HUD. */
+.loom-loader,
+.loom-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  background: #17120e;
+}
+.loom-loader { transition: opacity .4s ease; }
+.loom-loader.is-fading { opacity: 0; pointer-events: none; }
+.loom-loader__map {
+  position: absolute;
+  inset: -2%;
+  background: center / cover no-repeat url("/assets/ui/loom-map.jpeg"), center / cover no-repeat url("/WhatsApp%20Image%202026-09-24%20at%2019.13.00.jpeg");
+  animation: loom-map-zoom 10s linear forwards;
+}
+.loom-loader__box {
+  position: absolute;
+  left: 50%;
+  bottom: 10%;
+  width: min(360px, calc(100% - 40px));
+  transform: translateX(-50%);
+  padding: 12px 18px 14px;
+  color: #4b301d;
+  text-align: center;
+  background: #f4e4c1;
+  border: 2px solid #6a4226;
+  box-shadow: 0 0 0 3px #c69a5b, 0 6px 0 rgba(49, 28, 16, .3);
+  font-family: Georgia, serif;
+}
+.loom-loader__status { display: block; min-height: 1.3em; font-size: 15px; }
+.loom-loader__bar { height: 7px; margin-top: 10px; overflow: hidden; background: #ead5aa; border: 1px solid #8b6037; }
+.loom-loader__bar span { display: block; height: 100%; background: #d99b35; transition: width .2s ease-out; }
+.loom-intro { display: grid; place-items: center; color: #4a2e1b; background: radial-gradient(circle at 50% 35%, #f9edcf, #c99d62 150%); }
+.loom-intro__flourish { position: absolute; top: 8%; color: #8c5f32; font-size: 34px; }
+.loom-intro__skip { position: absolute; top: 22px; right: 24px; padding: 7px 11px; color: #5a3b24; background: transparent; border: 1px solid #8e663d; font-family: var(--font-body); font-size: 15px; cursor: pointer; }
+.loom-intro__story { width: min(620px, calc(100% - 48px)); padding: 36px 26px; text-align: center; border-top: 1px solid rgba(92, 52, 26, .35); border-bottom: 1px solid rgba(92, 52, 26, .35); animation: intro-text-in .6s ease both; }
+.loom-intro__chapter { margin: 0 0 18px; color: #8b5c2c; font-family: var(--font-pixel); font-size: 10px; text-transform: uppercase; }
+.loom-intro__text { margin: 0 auto 26px; max-width: 560px; font-family: Georgia, serif; font-size: clamp(22px, 3vw, 32px); line-height: 1.35; }
+.loom-intro__next { padding: 10px 18px; color: #fff4d8; background: #6d4a2f; border: 2px solid #432817; box-shadow: 0 3px 0 #432817; font-family: var(--font-body); font-size: 17px; cursor: pointer; }
+.loom-intro__dots { position: absolute; bottom: 9%; display: flex; gap: 8px; }
+.loom-intro__dots span { width: 8px; height: 8px; border: 1px solid #6d4a2f; border-radius: 50%; }
+.loom-intro__dots span.is-active { background: #6d4a2f; }
+@keyframes loom-map-zoom { from { transform: scale(1); } to { transform: scale(1.04); } }
+@keyframes intro-text-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.loom-hud { position: absolute; inset: 0; z-index: 25; pointer-events: none; color: #432b1b; font-family: Georgia, serif; font-size: calc(14px * var(--loom-text-scale)); }
+.loom-hud__tasks { position: absolute; top: 74px; right: 18px; width: min(250px, calc(100vw - 36px)); padding: 14px 15px; pointer-events: none; background: #f7e9c9; border: 2px solid #674126; box-shadow: 4px 5px 0 rgba(36, 21, 12, .28); transform: rotate(1deg); }
+.loom-hud__panel-title { margin-bottom: 10px; font-weight: 700; font-size: 17px; }
+.loom-hud__panel-title span { margin-right: 6px; color: #a46732; }
+.loom-hud__task { display: flex; gap: 8px; align-items: flex-start; margin: 8px 0; line-height: 1.2; }
+.loom-hud__check { display: grid; flex: 0 0 18px; place-items: center; width: 18px; height: 18px; color: #fff9e9; background: #e8d3a9; border: 1px solid #816143; font-family: Arial, sans-serif; font-weight: 700; }
+.loom-hud__task.is-done { color: #6c7d50; text-decoration: line-through; }
+.loom-hud__task.is-done .loom-hud__check { background: #719253; border-color: #526e3a; }
+.loom-hud__date { position: absolute; top: 15px; left: 18px; display: grid; gap: 2px; padding: 7px 12px; pointer-events: none; color: #fff0cf; background: #6d4a2f; border: 2px solid #382115; box-shadow: 0 3px 0 #382115; font-size: 13px; }
+.loom-hud__date-day { font-family: var(--font-pixel); font-size: 8px; }
+.loom-hud__comfort { position: absolute; right: 288px; top: 18px; display: flex; gap: 5px; align-items: center; color: #fff0c8; text-shadow: 0 1px 2px #2b170c; }
+.loom-hud__lantern { color: #ffd36e; font-size: 28px; filter: drop-shadow(0 0 7px #e6a63f); transition: opacity .3s ease; }
+.loom-hud__comfort-label { font-size: 12px; }
+.loom-hud__settings { position: absolute; top: 14px; right: 18px; width: 38px; height: 38px; pointer-events: auto; color: #fff0cf; background: #6d4a2f; border: 2px solid #382115; box-shadow: 0 3px 0 #382115; font-size: 20px; cursor: pointer; }
+@media (max-width: 640px) { .loom-hud__tasks { top: 66px; right: 10px; width: min(220px, calc(100vw - 20px)); } .loom-hud__comfort { top: 19px; right: 62px; } .loom-hud__comfort-label { display: none; } .loom-hud__date { left: 10px; } }
+@media (prefers-reduced-motion: reduce) { .loom-loader__map, .loom-intro__story { animation: none; } }
 
 /* Referral summary: when it is open, printing shows only the summary. */
 @media print {
